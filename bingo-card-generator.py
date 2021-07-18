@@ -1,25 +1,37 @@
 #!/usr/bin/env python3
-#
-# Tool to generate a clickable bingo card for virtual bingo events, and generate PDF's for printing these cards
-# Requires pdfkit and wkhtmltopdf for OS it's being run on (Windows requires an exe, linux install from pkg manager)
-#
-# This script currently will only generate 6 cards on one sheet (2 rows of 3 cards).
-# Hex codes can be used in place of words for colours, but must be wrapped in quotes on the command line
-#
-# While not normally necessary for CSS, the float values are required for the proper printing of the PDF's
-# If these are removed/modified, you can expect your PDF's to be off-center or misaligned.
+'''
+Tool to generate a clickable bingo card for virtual bingo events and to
+generate PDF's for printing these cards.
 
-import pdfkit
+Requires pdfkit and wkhtmltopdf for OS it's being run on
+(Windows requires an exe, linux install from pkg manager)
+
+This script currently will only generate 6 cards on one sheet (2 rows of 3 cards).
+Hex codes can be used in place of words for colours,
+but must be wrapped in quotes on the command line
+
+While not normally necessary for CSS, the float values are required for
+the proper printing of the PDF's with wkhtmltopdf.
+If these are removed, you can expect the PDF's to be off-center or misaligned.
+
+CSS Maple Leaf author Andre Lopes - https://codepen.io/alldrops/pen/jAzZmw
+'''
+
 import argparse
 from random import Random
+import pdfkit
 
 __author__ = 'Corey Forman'
 __date__ = '17 July 2021'
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 __description__ = 'Interactive Bingo Card Generator'
 
 
 def createCard(arguments):
+    """Creates the HTML version of the card"""
+    card_colour = arguments['card_colour']
+    dauber_colour = arguments['dauber_colour']
+    dauber_shape = arguments['dauber_shape']
     total = 1
     head1 = '''<!DOCTYPE html>
 <html lang="en">
@@ -29,20 +41,23 @@ def createCard(arguments):
 
     head2 = '''<style>
 .clear { width: 100%; clear: both; }
-.card { margin-top: 25px; float: left; width: 400px; height: auto; background-color: ''' + arguments['card_colour'] + '''; border-radius: 5px; padding: 10px; }
+.card { margin-top: 25px; float: left; width: 400px; height: auto; background-color: ''' + card_colour + '''; border-radius: 5px; padding: 10px; }
 .clear-card { position: absolute; }
-.card-number { position: relative; justify-items: center; text-align: center; font-family: Arial, Helvetica, sans-serif; font-weight: bold; color: ''' + arguments['card_colour'] + '''; }
+.card-number { position: relative; justify-items: center; text-align: center; font-family: Arial, Helvetica, sans-serif; font-weight: bold; color: ''' + card_colour + '''; }
 .grid-container { float: center; display: grid; grid-template-columns: auto auto auto; grid-gap: 5px; grid-template-rows: auto; grid-row-gap: 0px; justify-items: center; align-items: center; }
 .grid-child { float: left; justify-items: center; align-items: center; }
 .center { display: flex; justify-content: center; position: absolute;  }
 .headers > div { float: left; width: 80px; text-align: center; }
 .headers > div span { font-size: 30px; color: #fff; font-weight: bold; font-family: Arial, Helvetica, sans-serif;}
 .column { float: left; width: 80px; text-align: center; }
-.number { padding: 20px 0; border: 2px solid ''' + arguments['card_colour'] + '''; background-color: #fff; font-family: Arial, Helvetica, sans-serif; font-weight: bold; }
+.number { padding: 20px 0; border: 2px solid ''' + card_colour + '''; background-color: #fff; font-family: Arial, Helvetica, sans-serif; font-weight: bold; }
 .number span { color: #000; font-size: 20px; }
 .number span:hover { text-shadow: 0 0 5px rgba(0,0,0,0.5); }
-.circle-dauber { width: 23px; height: 23px; background: ''' + arguments['dauber_colour'] + '''; border-radius: 50%; position: relative; top: 36%; left: 36%; padding: 0px; }
-.square-dauber { width: 23px; height: 23px; background: ''' + arguments['dauber_colour'] + '''; border-radius: 10%; position: relative; top: 36%; left: 36%; padding: 0px; }
+.circle-dauber { width: 23px; height: 23px; background: ''' + dauber_colour + '''; border-radius: 50%; position: relative; top: 36%; left: 36%; padding: 0px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+.square-dauber { width: 23px; height: 23px; background: ''' + dauber_colour + '''; border-radius: 10%; position: relative; top: 36%; left: 36%; padding: 0px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+.maple-dauber { display: flex; align-items: center; justify-content: center; position: relative; margin-left: 0px; margin-right: 0px; margin-top: 11px; margin-bottom: 12px;}
+.maple-dauber:after { position: absolute; content: ""; width: 40px; height: 40px; background: #F00; display: box;
+    clip-path: polygon(47% 100%, 48% 70%, 25% 73%, 28% 65%, 7% 47%, 11% 44%, 8%     30%, 20% 32%, 23% 27%, 35% 40%, 32% 13%, 39% 16%, 50% 0, 61% 16%, 68% 13%,     65% 40%, 77% 27%, 80% 32%, 92% 30%, 89% 44%, 93% 47%, 72% 65%, 75% 73%, 52% 70%, 53% 100%); }
 </style>
 </head>
 <body>
@@ -356,86 +371,85 @@ $(document).ready(function() {
   for ($card = 1; $card <= 6; $card++) {
     for ($x = 0; $x <= 24; $x++) {
     $("<span>" + $i[($card - 1)][$x] + "</span>").appendTo('#card' + $card + '-c' + ($x + 1));
-	  }
+      }
   }
 '''
     js2 = '''
-  $('.number').click(function() { 
+  $('.number').click(function() {
 '''
     js3 = '''
   $('#clear-card').click(function() {
     location.reload();
-	});
+    });
   });
 });
 </script>
 </body>
 </html>
-    '''
+'''
 
     while total <= int(arguments['num'][0]):
-        card_colour = arguments['card_colour']
-        dauber_colour = arguments['dauber_colour']
-        dauber_shape = arguments['dauber_shape']
-        if card_colour == '#1644b9':
-            card_colour = 'default_blue'
-        filename = str(total) + '-' + card_colour + '.html'
-        f = open(filename, 'w')
-        f.write(head1)
-        f.write("<title>CARD " + str(total) + "</title>")
-        f.write(head2)
+        filename = str(total) + '-' + card_colour.strip('#') + '.html'
+        html = open(filename, 'w')
+        html.write(head1)
+        html.write("<title>CARD " + str(total) + "</title>")
+        html.write(head2)
         count = 1
         card_clear = '<div class="card-number" id="clear-card">CARD ' + str(total) + ' - CLICK HERE TO CLEAR CARD</div>'
         free_space = '$(\".col-13\").html(\'<span style=\"color:' + card_colour + '; font-weight:bold\">FREE</span>\');'
+        if dauber_shape == 'maple':
+            free_space = '$(\".col-13\").html(\'<div class=\"' + dauber_shape + '-dauber\"></div>\');'
         dauber_script = '$(this).html(\'<div class=\"' + dauber_shape + '-dauber\"></div>\');'
-        f.write(card_clear)
-        f.write(body)
+        html.write(card_clear)
+        html.write(body)
         while count <= 6:
             nums = str(genNums())
-            f.write('$card' + str(count) + ' = ' + nums + ';\n')
+            html.write('$card' + str(count) + ' = ' + nums + ';\n')
             count += 1
-        f.write(js1)
-        f.write(free_space)
-        f.write(js2)
-        f.write(dauber_script)
-        f.write(js3)
-        f.close()
+        html.write(js1)
+        html.write(free_space)
+        html.write(js2)
+        html.write(dauber_script)
+        html.write(js3)
+        html.close()
         if arguments['pdf']:
-            if card_colour == '#1644b9':
-                card_colour = 'default_blue'
-            pdffile = str(total) + '-' + card_colour + '.pdf'
+            pdffile = str(total) + '-' + card_colour.strip('#') + '.pdf'
             pdfPrint(filename, pdffile)
         current_count = total
         total += 1
     print("{} cards written.".format(str(current_count)))
 
+
 def genNums():
+    """Generate random numbers for each column"""
     rand = Random()
-    result = []
+    card_array = []
     for _ in range(5):
         b = rand.sample(range(1, 16), 1)[0]
-        while b in result:
+        while b in card_array:
             b = rand.sample(range(1, 16), 1)[0]
-        result.append(b)
+        card_array.append(b)
         i = rand.sample(range(16, 31), 1)[0]
-        while i in result:
+        while i in card_array:
             i = rand.sample(range(16, 31), 1)[0]
-        result.append(i)
+        card_array.append(i)
         n = rand.sample(range(31, 46), 1)[0]
-        while n in result:
+        while n in card_array:
             n = rand.sample(range(31, 46), 1)[0]
-        result.append(n)
+        card_array.append(n)
         g = rand.sample(range(46, 61), 1)[0]
-        while g in result:
+        while g in card_array:
             g = rand.sample(range(46, 61), 1)[0]
-        result.append(g)
+        card_array.append(g)
         o = rand.sample(range(61, 76), 1)[0]
-        while o in result:
+        while o in card_array:
             o = rand.sample(range(61, 76), 1)[0]
-        result.append(o)
-    return result
+        card_array.append(o)
+    return card_array
+
 
 def pdfPrint(html_file, out_file):
+    """Configure options for printing to PDF"""
     options = {
         'page-size': 'Letter',
         'page-width': '8.5in',
@@ -449,17 +463,20 @@ def pdfPrint(html_file, out_file):
     }
     pdfkit.from_file(html_file, out_file, options=options)
 
+
 def main():
+    """Parse arguments for PDF, card and dauber colour, and dauber shape"""
     arg_parse = argparse.ArgumentParser(description='Interactive Bingo Card Generator and PDF converter v' + str(__version__), formatter_class=argparse.RawTextHelpFormatter)
     arg_parse.add_argument('num', metavar='<# of cards>', help='Number of cards to generate', type=int, nargs=1)
     arg_parse.add_argument('-p', '--pdf', action='store_true', help='Convert the generated HTML file to a PDF')
     arg_parse.add_argument('-c', '--card-colour', metavar='<colour>', help='Colour for the card', default='#1644b9')
-    arg_parse.add_argument('-d', '--dauber-colour', metavar='<colour>', help='Colour for the dauber', default='purple')
-    arg_parse.add_argument('-s', '--dauber-shape', metavar='[square|circle]', help='Shape of the dauber', default='square')
+    arg_parse.add_argument('-d', '--dauber-colour', metavar='<colour>', help='Colour for the dauber', default='red')
+    arg_parse.add_argument('-s', '--dauber-shape', metavar='[square|circle|maple]', help='Shape of the dauber', default='circle')
 
     args = arg_parse.parse_args()
     all_args = vars(args)
     createCard(all_args)
+
 
 if __name__ == '__main__':
     main()
