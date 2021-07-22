@@ -20,10 +20,12 @@ CSS Maple Leaf author Andre Lopes - https://codepen.io/alldrops/pen/jAzZmw
 import argparse
 from random import Random
 import pdfkit
+import re
+import pandas as pd
 
 __author__ = 'Corey Forman'
-__date__ = '18 July 2021'
-__version__ = '1.1.1'
+__date__ = '21 July 2021'
+__version__ = '1.2.0'
 __description__ = 'Interactive Bingo Card Generator'
 
 
@@ -461,20 +463,92 @@ def pdfPrint(html_file, out_file):
     }
     pdfkit.from_file(html_file, out_file, options=options)
 
+def grabNumbers(arguments):
+    num = int(arguments['num'][0])
+    total = 1
+    basename = arguments['basename']
+    pattern = '\$card\d = \[*;*'
+    if '.html' not in basename:
+        basename = basename + '.html'
+    while total <= num:
+        input_filename = str(total) + "-" + basename
+        input_file = open(input_filename, 'r')
+        input_file = input_file.readlines()
+        output_filename = str(total) + "-" + basename.strip('.html') + '.csv'
+        output_file = open(output_filename, 'w+')
+        full_sheet = []
+        for line in input_file:
+            match = re.match(pattern, line)
+            if match:
+                row_1, row_2, row_3, row_4, row_5, \
+                row_6, row_7, row_8, row_9, row_10 = ([] for i in range(10))
+                line = re.sub(pattern, '', line)
+                line = line.replace("];\n", "").replace(',','')
+                line = line.split()
+                for i in line:
+                    full_sheet.append(i)
+
+        indices = {
+            1: [[0, 1, 2, 3, 4], [25, 26, 27, 28, 29], [50, 51, 52, 53, 54]],
+            2: [[5, 6, 7, 8, 9], [30, 31, 32, 33, 34], [55, 56, 57, 58, 59]],
+            3: [[10, 11, 12, 13, 14], [35, 36, 37, 38, 39], [60, 61, 62, 63, 64]],
+            4: [[15, 16, 17, 18, 19], [40, 41, 42, 43, 44], [65, 66, 67, 68, 69]],
+            5: [[20, 21, 22, 23, 24], [45, 46, 47, 48, 49], [70, 71, 72, 73, 74]],
+            6: [[75, 76, 77, 78, 79], [100, 101, 102, 103, 104], [125, 126, 127, 128, 129]],
+            7: [[80, 81, 82, 83, 84], [105, 106, 107, 108, 109], [130, 131, 132, 133, 134]],
+            8: [[85, 86, 87, 88, 89], [110, 111, 112, 113, 114], [135, 136, 137, 138, 139]],
+            9: [[90, 91, 92, 93, 94], [115, 116, 117, 118, 119], [140, 141, 142, 143, 144]],
+            10: [[95, 96, 97, 98, 99], [120, 121, 122, 123, 124], [145, 146, 147, 148, 149]]
+        }
+
+        all_rows = [row_1, row_2, row_3, row_4, row_5, row_6, row_7, row_8, row_9, row_10]
+        for idx in range(len(indices)):
+            for i in indices.get((idx + 1)):
+                (all_rows[idx]).extend(map(full_sheet.__getitem__, i))
+            all_rows[idx].insert(5, " ")
+            all_rows[idx].insert(11, " ")
+        all_rows[2][2] = all_rows[2][8] = all_rows[2][14] = all_rows[7][2] = all_rows[7][8] = all_rows[7][14] = "*"
+        all_rows.insert(5, [", "])
+        for row in all_rows:
+            row = ','.join(map(str, row)) + '\n'
+            output_file.write(row)
+        output_file.close()
+        total += 1
+    print("Complete")
+
+def writeToExcel(number_of_csvs, base_filename, excel_name):
+    writer = pd.ExcelWriter(excel_name)
+    for csvnum in range(1, number_of_csvs + 1):
+        csvfile = str(csvnum) + '-' + base_filename.strip('.html') + '.csv'
+        df = pd.read_csv(csvfile, sep=',', header=None)
+        df.to_excel(writer, sheet_name=str(csvnum), index=False, columns=None, startrow=1, startcol=1)
+        workbook = writer.book
+        worksheet = writer.sheets[str(csvnum)]
+        format = workbook.add_format()
+        format.set_align('center')
+        worksheet.set_column('A:Z', 10, format)
+    writer.save()
+
 
 def main():
     """Parse arguments for PDF, card and dauber colour, and dauber shape"""
     arg_parse = argparse.ArgumentParser(description='Interactive Bingo Card Generator and PDF converter v' + str(__version__), formatter_class=argparse.RawTextHelpFormatter)
     arg_parse.add_argument('num', metavar='<# of cards>', help='Number of cards to generate', type=int, nargs=1)
     arg_parse.add_argument('-p', '--pdf', action='store_true', help='Convert the generated HTML file to a PDF')
-    arg_parse.add_argument('-c', '--card-colour', metavar='<colour>', help='Colour for the card', default='#1644b9')
-    arg_parse.add_argument('-d', '--dauber-colour', metavar='<colour>', help='Colour for the dauber', default='red')
-    arg_parse.add_argument('-s', '--dauber-shape', metavar='[square|circle|maple]', help='Shape of the dauber', default='circle')
+    arg_parse.add_argument('-c', '--card-colour', help='Colour for the card', default='#1644b9')
+    arg_parse.add_argument('-d', '--dauber-colour', help='Colour for the dauber', default='red')
+    arg_parse.add_argument('-s', '--dauber-shape', help='Shape of the dauber [square|circle|maple]', default='circle')
+    arg_parse.add_argument('-b', '--basename', help='Basename for the file (ie: 1-blue.html = blue.html, - is implied)')
+    arg_parse.add_argument('-x', '--excel', metavar='filename', help='Output all CSVs to a single Excel Workbook (Macro Enabled)')
 
     args = arg_parse.parse_args()
     all_args = vars(args)
-    createCard(all_args)
 
+    if all_args['excel']:
+        grabNumbers(all_args)
+        writeToExcel(all_args['num'][0], all_args['basename'], all_args['excel'])
+    else:
+        createCard(all_args)
 
 if __name__ == '__main__':
     main()
