@@ -22,10 +22,12 @@ from random import Random
 import pdfkit
 import re
 import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.styles import Font, NamedStyle, PatternFill
 
 __author__ = 'Corey Forman'
-__date__ = '21 July 2021'
-__version__ = '1.2.0'
+__date__ = '22 July 2021'
+__version__ = '1.3.0'
 __description__ = 'Interactive Bingo Card Generator'
 
 
@@ -517,6 +519,19 @@ def grabNumbers(arguments):
     print("Complete")
 
 def writeToExcel(number_of_csvs, base_filename, excel_name):
+    header = [' ', 'B', 'I', 'N', 'G', 'O', ' ', 'B', 'I', 'N', 'G', 'O', ' ', 'B', 'I', 'N', 'G', 'O']
+    bingo_header = NamedStyle(name="bingo_header")
+    bingo_header.font = Font(bold=True, name='Arial', size='15')
+    bingo_header.alignment.horizontal = 'center'
+    bingo_header.fill.start_color="FFFFFF"
+    bingo_header.fill.end_color="FFFFFF"
+    bingo_header.fill.fill_type="solid"
+    free_space = PatternFill(start_color="FFC000", end_color="FFC000", fill_type="solid")
+    border = NamedStyle(name="border")
+    border.fill.start_color="B2B2B2"
+    border.fill.end_color="B2B2B2"
+    border.fill.fill_type="solid"
+    border_columns = PatternFill(start_color="B2B2B2", end_color="B2B2B2", fill_type="solid")
     writer = pd.ExcelWriter(excel_name)
     for csvnum in range(1, number_of_csvs + 1):
         csvfile = str(csvnum) + '-' + base_filename.strip('.html') + '.csv'
@@ -524,11 +539,46 @@ def writeToExcel(number_of_csvs, base_filename, excel_name):
         df.to_excel(writer, sheet_name=str(csvnum), index=False, columns=None, startrow=1, startcol=1)
         workbook = writer.book
         worksheet = writer.sheets[str(csvnum)]
-        format = workbook.add_format()
+        format = workbook.add_format({"font_name": "Arial", "font_size": "13"})
         format.set_align('center')
-        worksheet.set_column('A:Z', 10, format)
+        worksheet.set_column('A:S', 8, format)
+        worksheet.set_default_row(30)
     writer.save()
-
+    wb = load_workbook(excel_name)
+    wb.add_named_style(bingo_header)
+    wb.add_named_style(border)
+    for sheet in range(1, number_of_csvs + 1):
+        ws = wb[str(sheet)]
+        ws.delete_rows(2)
+        ws.insert_rows(1)
+        ws.insert_rows(8)
+        ws['D5'].fill = ws['J5'].fill = ws['P5'].fill = ws['D12'].fill = ws['J12'].fill = ws['P12'].fill = free_space
+        for col, val in enumerate(header, start=1):
+            ws.cell(row=2, column=col).value = val
+            ws.cell(row=9, column=col).value = val
+        for cell in ws["1:1"]:
+            cell.style = 'border'
+        for cell in ws["2:2"]:
+            cell.style = 'bingo_header'
+        for cell in ws["8:8"]:
+            cell.style = 'border'
+        for cell in ws["9:9"]:
+            cell.style = 'bingo_header'
+        for cell in ws["15:15"]:
+            cell.style = 'border'
+        for i, cell in enumerate(ws["A1":"A15"]):
+            for n, cellObj in enumerate(cell):
+                cellObj.style = border
+        for i, cell in enumerate(ws["G1":"G15"]):
+            for n, cellObj in enumerate(cell):
+                cellObj.style = border
+        for i, cell in enumerate(ws["M1":"M15"]):
+            for n, cellObj in enumerate(cell):
+                cellObj.style = border
+        for i, cell in enumerate(ws["S1":"S15"]):
+            for n, cellObj in enumerate(cell):
+                cellObj.style = border
+    wb.save(excel_name)
 
 def main():
     """Parse arguments for PDF, card and dauber colour, and dauber shape"""

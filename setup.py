@@ -18,7 +18,9 @@ setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        "pdfkit"
+        "pdfkit",
+        "openpyxl",
+        "pandas"
     ],
     scripts=['bingo-card-generator.py'],
     package_data={'': ['README.md, LICENSE']}
