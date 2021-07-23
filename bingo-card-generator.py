@@ -539,7 +539,7 @@ def writeToExcel(number_of_csvs, base_filename, excel_name):
         df.to_excel(writer, sheet_name=str(csvnum), index=False, columns=None, startrow=1, startcol=1)
         workbook = writer.book
         worksheet = writer.sheets[str(csvnum)]
-        format = workbook.add_format({"font_name": "Arial", "font_size": "13"})
+        format = workbook.add_format({"font_name": "Arial", "font_size": "13", "align": "center", "valign": "vcenter"})
         format.set_align('center')
         worksheet.set_column('A:S', 8, format)
         worksheet.set_default_row(30)
