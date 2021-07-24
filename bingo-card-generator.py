@@ -458,9 +458,9 @@ def pdfPrint(html_file, out_file):
         'page-height': '11in',
         'orientation': 'Landscape',
         'margin-top': '0.5in',
-        'margin-right': '0.2in',
+        'margin-right': '0in',
         'margin-bottom': '0.5in',
-        'margin-left': '0.25in',
+        'margin-left': '0in',
         'quiet': ''
     }
     pdfkit.from_file(html_file, out_file, options=options)
