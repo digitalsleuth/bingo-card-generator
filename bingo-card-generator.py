@@ -26,8 +26,8 @@ from openpyxl import load_workbook
 from openpyxl.styles import Font, NamedStyle, PatternFill
 
 __author__ = 'Corey Forman'
-__date__ = '22 July 2021'
-__version__ = '1.3.0'
+__date__ = '24 July 2021'
+__version__ = '1.3.1'
 __description__ = 'Interactive Bingo Card Generator'
 
 

@@ -6,7 +6,7 @@ with open("README.md", encoding='utf8') as readme:
 
 setup(
     name="bingo-card-generator",
-    version="1.2.0",
+    version="1.3.1",
     author="Corey Forman",
     url="https://github.com/digitalsleuth/bingo-card-generator",
     description=("Interactive Bingo Card Generator"),
