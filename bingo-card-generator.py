@@ -19,18 +19,19 @@ CSS Maple Leaf author Andre Lopes - https://codepen.io/alldrops/pen/jAzZmw
 
 import argparse
 from random import Random
-import pdfkit
 import re
 import csv
+import os
+import pdfkit
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, NamedStyle, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
-
+from openpyxl.formatting.rule import FormulaRule
 
 __author__ = 'Corey Forman'
-__date__ = '24 July 2021'
-__version__ = '1.4.0'
-__description__ = 'Interactive Bingo Card Generator'
+__date__ = '30 Aug 2021'
+__version__ = '1.5.0'
+__description__ = 'Interactive Bingo Card and PDF Generator'
 
 
 def createCard(arguments):
@@ -393,7 +394,8 @@ $(document).ready(function() {
 </body>
 </html>
 '''
-
+    if arguments['pdf']:
+        print("Generating PDF's, please wait")
     while total <= int(arguments['num'][0]):
         filename = str(total) + '-' + card_colour.strip('#') + '.html'
         html = open(filename, 'w')
@@ -401,9 +403,14 @@ $(document).ready(function() {
         html.write("<title>CARD " + str(total) + "</title>")
         html.write(head2)
         count = 1
-        card_clear = '<div class="card-number" id="clear-card">CARD ' + str(total) + ' - CLICK HERE TO CLEAR CARD</div>'
-        free_space = '$(\".col-13\").html(\'<span style=\"color:' + card_colour + '; font-weight:bold\">FREE</span>\');'
-        dauber_script = '$(this).html(\'<div class=\"' + dauber_shape + '-dauber\"></div>\');'
+        card_clear = ('<div class="card-number" id="clear-card">CARD ' +
+                      str(total) +
+                      ' - CLICK HERE TO CLEAR CARD</div>')
+        free_space = ('$(\".col-13\").html(\'<span style=\"color:' +
+                      card_colour +
+                      '; font-weight:bold\">FREE</span>\');')
+        dauber_script = ('$(this).html(\'<div class=\"' +
+                         dauber_shape + '-dauber\"></div>\');')
         html.write(card_clear)
         html.write(body)
         while count <= 6:
@@ -421,7 +428,7 @@ $(document).ready(function() {
             pdfPrint(filename, pdffile)
         current_count = total
         total += 1
-    print("{} cards written.".format(str(current_count)))
+    print("{} cards written".format(str(current_count)))
 
 
 def genNums():
@@ -451,7 +458,6 @@ def genNums():
         card_array.append(o)
     return card_array
 
-
 def pdfPrint(html_file, out_file):
     """Configure options for printing to PDF"""
     options = {
@@ -469,16 +475,21 @@ def pdfPrint(html_file, out_file):
 
 def grabNumbers(arguments):
     num = int(arguments['num'][0])
+    print("Extracting numbers from {:d} cards".format(num))
     total = 1
-    basename = arguments['basename']
+    if arguments['everything'] and not arguments['base_colour']:
+        basecolour = arguments['card_colour']
+    else:
+        basecolour = arguments['base_colour']
     pattern = '\$card\d = \[*;*'
-    if '.html' not in basename:
-        basename = basename + '.html'
+    if '.html' not in basecolour:
+        basecolour = basecolour + '.html'
     while total <= num:
-        input_filename = str(total) + "-" + basename
+        input_filename = str(total) + "-" + basecolour
+        input_filename = input_filename.replace('#', '')
         input_file = open(input_filename, 'r')
         input_file = input_file.readlines()
-        output_filename = str(total) + "-" + basename.strip('.html') + '.csv'
+        output_filename = str(total) + "-" + basecolour.strip('.html') + '.csv'
         output_file = open(output_filename, 'w+')
         full_sheet = []
         for line in input_file:
@@ -487,7 +498,7 @@ def grabNumbers(arguments):
                 row_1, row_2, row_3, row_4, row_5, \
                 row_6, row_7, row_8, row_9, row_10 = ([] for i in range(10))
                 line = re.sub(pattern, '', line)
-                line = line.replace("];\n", "").replace(',','')
+                line = line.replace("];\n", "").replace(',', '')
                 line = line.split()
                 for i in line:
                     full_sheet.append(i)
@@ -511,42 +522,87 @@ def grabNumbers(arguments):
                 (all_rows[idx]).extend(map(full_sheet.__getitem__, i))
             all_rows[idx].insert(5, " ")
             all_rows[idx].insert(11, " ")
-        all_rows[2][2] = all_rows[2][8] = all_rows[2][14] = all_rows[7][2] = all_rows[7][8] = all_rows[7][14] = "*"
+        all_rows[2][2] = all_rows[2][8] = all_rows[2][14] = "*"
+        all_rows[7][2] = all_rows[7][8] = all_rows[7][14] = "*"
         all_rows.insert(5, [", "])
         for row in all_rows:
             row = ','.join(map(str, row)) + '\n'
             output_file.write(row)
         output_file.close()
         total += 1
-    print("Complete")
+    print("Extraction Complete")
 
 def writeToExcel(number_of_csvs, base_filename, excel_name):
-    header = [' ', 'B', 'I', 'N', 'G', 'O', ' ', 'B', 'I', 'N', 'G', 'O', ' ', 'B', 'I', 'N', 'G', 'O']
-    bingo_header = NamedStyle(name = "bingo_header")
-    bingo_header.font = Font(bold = True, name = 'Arial', size = '15')
+    header = [' ', 'B', 'I', 'N', 'G', 'O',
+              ' ', 'B', 'I', 'N', 'G', 'O',
+              ' ', 'B', 'I', 'N', 'G', 'O']
+    call_sheet_header = ['B', 'I', 'N', 'G', 'O']
+    call_sheet = NamedStyle(name="call_sheet")
+    call_sheet.alignment.horizontal = 'center'
+    call_sheet.alignment.vertical = 'center'
+    bingo_header = NamedStyle(name="bingo_header")
+    bingo_header.font = Font(bold=True, name='Arial', size='15')
     bingo_header.alignment.horizontal = 'center'
     bingo_header.alignment.vertical = 'center'
-    bingo_header.fill.start_color = "FFFFFF"
-    bingo_header.fill.end_color = "FFFFFF"
-    bingo_header.fill.fill_type = "solid"
-    free_space = PatternFill(start_color="FFC000", end_color="FFC000", fill_type="solid")
-    borders = PatternFill(start_color = "B2B2B2", end_color = "B2B2B2", fill_type = "solid")
-    alignment = Alignment(horizontal = 'center', vertical = 'center')
+    bingo_header.fill.start_color = 'FFFFFF'
+    bingo_header.fill.end_color = 'FFFFFF'
+    bingo_header.fill.fill_type = 'solid'
+    called_number = PatternFill(bgColor="FFC000")
+    free_space = PatternFill(start_color='FFC000', end_color='FFC000', fill_type='solid')
+    borders = PatternFill(start_color='B2B2B2', end_color='B2B2B2', fill_type='solid')
+    alignment = Alignment(horizontal='center', vertical='center')
     writer = Workbook(excel_name)
+    call_worksheet = writer.create_sheet('CALL')
+    call_worksheet.append(call_sheet_header)
     for csvnum in range(1, number_of_csvs + 1):
         csvfile = str(csvnum) + '-' + base_filename.strip('.html') + '.csv'
         worksheet = writer.create_sheet(str(csvnum))
-        font = Font(name = "Arial", size = "13", vertAlign = None)
-        alignment = Alignment(horizontal = "center", vertical = "center")
-        readcsv = open(csvfile, 'r', newline = '', encoding = 'utf-8')
+        readcsv = open(csvfile, 'r', newline='', encoding='utf-8')
         reader = csv.reader(readcsv)
         for row in reader:
+            for item in row:
+                try:
+                    row[row.index(item)] = int(row[row.index(item)])
+                except ValueError:
+                    pass
             worksheet.append(row)
+        os.remove(csvfile)
     writer.save(excel_name)
     wb = load_workbook(excel_name)
     wb.add_named_style(bingo_header)
+    wb.add_named_style(call_sheet)
+    ws_call = wb['CALL']
+    for row in range(1, 17):
+        ws_call.row_dimensions[row].height = 20
+    call_font = Font(bold=True, name='Arial', size='20')
+    col_B = ws_call.column_dimensions['A']
+    col_I = ws_call.column_dimensions['B']
+    col_N = ws_call.column_dimensions['C']
+    col_G = ws_call.column_dimensions['D']
+    col_O = ws_call.column_dimensions['E']
+    col_B.font = col_I.font = col_N.font = col_G.font = col_O.font = call_font
+    col_B.alignment = col_I.alignment = col_N.alignment = col_G.alignment = col_O.alignment = alignment
+    for i, cell in enumerate(ws_call["A1":"E1"]):
+        for n, cellObj in enumerate(cell):
+            cellObj.style = call_sheet
+            cellObj.font = Font(bold=True, name='Arial', size='20', color='FF0000')
     for sheet in range(1, number_of_csvs + 1):
         ws = wb[str(sheet)]
+        ws.conditional_formatting.add('B1:B14', FormulaRule(formula=['NOT(ISNA(VLOOKUP(B1,CALL!$A$2:$A$16,1,FALSE)))'], fill=called_number))
+        ws.conditional_formatting.add('C1:C14', FormulaRule(formula=['NOT(ISNA(VLOOKUP(C1,CALL!$B$2:$B$16,1,FALSE)))'], fill=called_number))
+        ws.conditional_formatting.add('D1:D14', FormulaRule(formula=['NOT(ISNA(VLOOKUP(D1,CALL!$C$2:$C$16,1,FALSE)))'], fill=called_number))
+        ws.conditional_formatting.add('E1:E14', FormulaRule(formula=['NOT(ISNA(VLOOKUP(E1,CALL!$D$2:$D$16,1,FALSE)))'], fill=called_number))
+        ws.conditional_formatting.add('F1:F14', FormulaRule(formula=['NOT(ISNA(VLOOKUP(F1,CALL!$E$2:$E$16,1,FALSE)))'], fill=called_number))
+        ws.conditional_formatting.add('H1:H14', FormulaRule(formula=['NOT(ISNA(VLOOKUP(H1,CALL!$A$2:$A$16,1,FALSE)))'], fill=called_number))
+        ws.conditional_formatting.add('I1:I14', FormulaRule(formula=['NOT(ISNA(VLOOKUP(I1,CALL!$B$2:$B$16,1,FALSE)))'], fill=called_number))
+        ws.conditional_formatting.add('J1:J14', FormulaRule(formula=['NOT(ISNA(VLOOKUP(J1,CALL!$C$2:$C$16,1,FALSE)))'], fill=called_number))
+        ws.conditional_formatting.add('K1:K14', FormulaRule(formula=['NOT(ISNA(VLOOKUP(K1,CALL!$D$2:$D$16,1,FALSE)))'], fill=called_number))
+        ws.conditional_formatting.add('L1:L14', FormulaRule(formula=['NOT(ISNA(VLOOKUP(L1,CALL!$E$2:$E$16,1,FALSE)))'], fill=called_number))
+        ws.conditional_formatting.add('N1:N14', FormulaRule(formula=['NOT(ISNA(VLOOKUP(N1,CALL!$A$2:$A$16,1,FALSE)))'], fill=called_number))
+        ws.conditional_formatting.add('O1:O14', FormulaRule(formula=['NOT(ISNA(VLOOKUP(O1,CALL!$B$2:$B$16,1,FALSE)))'], fill=called_number))
+        ws.conditional_formatting.add('P1:P14', FormulaRule(formula=['NOT(ISNA(VLOOKUP(P1,CALL!$C$2:$C$16,1,FALSE)))'], fill=called_number))
+        ws.conditional_formatting.add('Q1:Q14', FormulaRule(formula=['NOT(ISNA(VLOOKUP(Q1,CALL!$D$2:$D$16,1,FALSE)))'], fill=called_number))
+        ws.conditional_formatting.add('R1:R14', FormulaRule(formula=['NOT(ISNA(VLOOKUP(R1,CALL!$E$2:$E$16,1,FALSE)))'], fill=called_number))
         for row in range(1, 18):
             ws.row_dimensions[row].height = 20
         column = 1
@@ -558,8 +614,10 @@ def writeToExcel(number_of_csvs, base_filename, excel_name):
         ws.insert_rows(0)
         ws.insert_rows(1)
         ws.insert_rows(8)
-        ws['D5'].fill = ws['J5'].fill = ws['P5'].fill = ws['D12'].fill = ws['J12'].fill = ws['P12'].fill = free_space
-        ws['D5'].alignment = ws['J5'].alignment = ws['P5'].alignment = ws['D12'].alignment = ws['J12'].alignment = ws['P12'].alignment = alignment
+        ws['D5'].fill = ws['J5'].fill = ws['P5'].fill = free_space
+        ws['D12'].fill = ws['J12'].fill = ws['P12'].fill = free_space
+        ws['D5'].alignment = ws['J5'].alignment = ws['P5'].alignment = alignment
+        ws['D12'].alignment = ws['J12'].alignment = ws['P12'].alignment = alignment
         for col, val in enumerate(header, start=1):
             ws.cell(row=2, column=col).value = val
             ws.cell(row=9, column=col).value = val
@@ -585,25 +643,41 @@ def writeToExcel(number_of_csvs, base_filename, excel_name):
         for i, cell in enumerate(ws["S1":"S15"]):
             for n, cellObj in enumerate(cell):
                 cellObj.fill = borders
+        for row in ws.rows:
+            for cell in row:
+                cell.alignment = alignment
     wb.save(excel_name)
 
 def main():
     """Parse arguments for PDF, card and dauber colour, and dauber shape"""
-    arg_parse = argparse.ArgumentParser(description='Interactive Bingo Card Generator and PDF converter v' + str(__version__), formatter_class=argparse.RawTextHelpFormatter)
-    arg_parse.add_argument('num', metavar='<# of cards>', help='Number of cards to generate', type=int, nargs=1)
+    arg_parse = argparse.ArgumentParser(description='Interactive Bingo Card and PDF Generator v' + str(__version__), formatter_class=argparse.RawTextHelpFormatter)
+    arg_parse.add_argument('num', metavar='<# of cards>', help='Number of cards to generate or convert', type=int, nargs=1)
     arg_parse.add_argument('-p', '--pdf', action='store_true', help='Convert the generated HTML file to a PDF')
-    arg_parse.add_argument('-c', '--card-colour', help='Colour for the card', default='#1644b9')
+    arg_parse.add_argument('-c', '--card-colour', help='Colour for the card', default='blue')
     arg_parse.add_argument('-d', '--dauber-colour', help='Colour for the dauber', default='red')
     arg_parse.add_argument('-s', '--dauber-shape', help='Shape of the dauber [square|circle|maple]', default='circle')
-    arg_parse.add_argument('-b', '--basename', help='Basename for the file (ie: 1-blue.html = blue.html, - is implied)')
-    arg_parse.add_argument('-x', '--excel', metavar='filename', help='Output all CSVs to a single Excel Workbook (Macro Enabled)')
+    arg_parse.add_argument('-b', '--base-colour', help='Base colour for the HTML files (ie: 1-blue.html = blue)')
+    arg_parse.add_argument('-x', '--excel', metavar='filename', help='Output all CSVs to a single Excel Workbook - requires -b')
+    arg_parse.add_argument('-e', '--everything', help='Create HTML files, PDF\'s, and Spreadsheet, requires -c, -d, and -s for customization', action='store_true')
 
     args = arg_parse.parse_args()
     all_args = vars(args)
-
-    if all_args['excel']:
+    if all_args['excel'] and all_args['base_colour']:
         grabNumbers(all_args)
-        writeToExcel(all_args['num'][0], all_args['basename'], all_args['excel'])
+        writeToExcel(all_args['num'][0], all_args['base_colour'], all_args['excel'])
+    elif all_args['excel'] and not all_args['base_colour']:
+        print("The Excel option requires the -b, --base-colour value as well")
+        raise SystemExit(0)
+    elif all_args['everything'] and all_args['excel']:
+        all_args['pdf'] = True
+        createCard(all_args)
+        grabNumbers(all_args)
+        writeToExcel(all_args['num'][0], all_args['card_colour'], all_args['excel'])
+    elif all_args['everything'] and not all_args['excel']:
+        all_args['pdf'] = True
+        createCard(all_args)
+        grabNumbers(all_args)
+        writeToExcel(all_args['num'][0], all_args['card_colour'], str(all_args['card_colour'] + '-cards.xlsx'))
     else:
         createCard(all_args)
 
