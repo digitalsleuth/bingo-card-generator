@@ -11,5 +11,8 @@ If these are removed/modified, you can expect your PDF's to be off-center or mis
 
 Icon made by Freepik (https://www.freepik.com) from Flaticon (www.flaticon.com)
 
+Standalone executable made using pyinstaller:
+`pyinstaller -F --icon=bingo.ico bingo-card-generator.py`
+
 TO DO:
 - Make number of cards per sheet customizable
