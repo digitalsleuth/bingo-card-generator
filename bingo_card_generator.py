@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 '''
 Tool to generate a clickable bingo card for virtual bingo events and to
 generate PDF's for printing these cards.
@@ -17,6 +18,7 @@ If these are removed, you can expect the PDF's to be off-center or misaligned.
 CSS Maple Leaf author Andre Lopes - https://codepen.io/alldrops/pen/jAzZmw
 '''
 
+from PyQt5 import QtCore, QtGui, QtWidgets
 import argparse
 from random import Random
 import re
@@ -29,10 +31,105 @@ from openpyxl.utils import get_column_letter
 from openpyxl.formatting.rule import FormulaRule
 
 __author__ = 'Corey Forman'
-__date__ = '30 Aug 2021'
-__version__ = '1.5.0'
+__date__ = '6 Sep 2021'
+__version__ = '2.0.0'
 __description__ = 'Interactive Bingo Card and PDF Generator'
 
+
+class Ui_Dialog(object):
+    def setupUi(self, Dialog):
+        Dialog.setObjectName("Dialog")
+        Dialog.resize(400, 219)
+        self.dauber_shape = QtWidgets.QComboBox(Dialog)
+        self.dauber_shape.setGeometry(QtCore.QRect(140, 160, 111, 27))
+        self.dauber_shape.setEditable(False)
+        self.dauber_shape.setObjectName("dauber_shape")
+        self.dauber_shape.addItem("")
+        self.dauber_shape.addItem("")
+        self.dauber_shape.addItem("")
+        self.dauber_shape_label = QtWidgets.QLabel(Dialog)
+        self.dauber_shape_label.setGeometry(QtCore.QRect(10, 163, 121, 21))
+        self.dauber_shape_label.setToolTipDuration(-1)
+        self.dauber_shape_label.setObjectName("dauber_shape_label")
+        self.title_label = QtWidgets.QLabel(Dialog)
+        self.title_label.setGeometry(QtCore.QRect(4, 5, 391, 20))
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.title_label.setFont(font)
+        self.title_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.title_label.setObjectName("title_label")
+        self.dauber_colour = QtWidgets.QLineEdit(Dialog)
+        self.dauber_colour.setGeometry(QtCore.QRect(140, 120, 111, 31))
+        self.dauber_colour.setObjectName("dauber_colour")
+        self.dauber_colour_label = QtWidgets.QLabel(Dialog)
+        self.dauber_colour_label.setGeometry(QtCore.QRect(10, 125, 121, 21))
+        self.dauber_colour_label.setToolTipDuration(-1)
+        self.dauber_colour_label.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.dauber_colour_label.setObjectName("dauber_colour_label")
+        self.card_colour = QtWidgets.QLineEdit(Dialog)
+        self.card_colour.setGeometry(QtCore.QRect(140, 80, 111, 31))
+        self.card_colour.setObjectName("card_colour")
+        self.card_colour_label = QtWidgets.QLabel(Dialog)
+        self.card_colour_label.setGeometry(QtCore.QRect(10, 85, 121, 21))
+        self.card_colour_label.setToolTipDuration(-1)
+        self.card_colour_label.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.card_colour_label.setObjectName("card_colour_label")
+        self.generate = QtWidgets.QPushButton(Dialog)
+        self.generate.setGeometry(QtCore.QRect(290, 40, 100, 31))
+        self.generate.setDefault(False)
+        self.generate.setObjectName("generate")
+        self.generate.clicked.connect(lambda: guiEverything(int(self.number.text()),self.card_colour.text(), self.dauber_colour.text(), self.dauber_shape.currentText()))
+        self.close = QtWidgets.QPushButton(Dialog)
+        self.close.setGeometry(QtCore.QRect(290, 80, 100, 31))
+        self.close.setObjectName("close")
+        self.close.clicked.connect(QtWidgets.QApplication.instance().quit)
+        self.number = QtWidgets.QLineEdit(Dialog)
+        self.number.setGeometry(QtCore.QRect(140, 40, 111, 31))
+        self.number.setPlaceholderText("")
+        self.number.setObjectName("number")
+        self.number_label = QtWidgets.QLabel(Dialog)
+        self.number_label.setGeometry(QtCore.QRect(10, 45, 121, 21))
+        self.number_label.setToolTipDuration(-1)
+        self.number_label.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.number_label.setObjectName("number_label")
+
+        self.retranslateUi(Dialog)
+        QtCore.QMetaObject.connectSlotsByName(Dialog)
+
+    def retranslateUi(self, Dialog):
+        _translate = QtCore.QCoreApplication.translate
+        Dialog.setWindowTitle(_translate("Dialog", "Interactive Bingo Card Generator"))
+        self.dauber_shape.setCurrentText(_translate("Dialog", "square"))
+        self.dauber_shape.setItemText(0, _translate("Dialog", "square"))
+        self.dauber_shape.setItemText(1, _translate("Dialog", "circle"))
+        self.dauber_shape.setItemText(2, _translate("Dialog", "maple"))
+        self.dauber_shape_label.setToolTip(_translate("Dialog", "Choose the shape of the dauber"))
+        self.dauber_shape_label.setText(_translate("Dialog", "Dauber Shape"))
+        self.title_label.setText(_translate("Dialog", "Interactive Bingo Card and PDF Generator"))
+        self.dauber_colour.setText(_translate("Dialog", "red"))
+        self.dauber_colour_label.setToolTip(_translate("Dialog", "Choose the shape of the dauber"))
+        self.dauber_colour_label.setText(_translate("Dialog", "Dauber Colour"))
+        self.card_colour.setText(_translate("Dialog", "blue"))
+        self.card_colour_label.setToolTip(_translate("Dialog", "Choose the shape of the dauber"))
+        self.card_colour_label.setText(_translate("Dialog", "Card Colour"))
+        self.generate.setText(_translate("Dialog", "Generate"))
+        self.close.setText(_translate("Dialog", "Close"))
+        self.number_label.setToolTip(_translate("Dialog", "Choose the shape of the dauber"))
+        self.number_label.setText(_translate("Dialog", "# of Cards"))
+
+
+def guiEverything(number, card_colour, dauber_colour, dauber_shape):
+    args = {'num': number, 'pdf': True, 'card_colour': card_colour, 'dauber_colour': dauber_colour, 'dauber_shape': dauber_shape, 'base_colour': card_colour, 'excel': str(card_colour + '-cards.xlsx'), 'everything': True}
+    createCard(args)
+    grabNumbers(args)
+    writeToExcel(args['num'], args['card_colour'], args['excel'])
+    msgBox = QtWidgets.QMessageBox()
+    msgBox.setWindowTitle("Finished")
+    #msgBox.setWindowIcon(QtGui.QIcon("bingo.ico"))
+    msgBox.setText("All files created in {}\n\n {} {} card(s) created with a {}, {} shaped dauber.\n\n {} Excel file also created for tracking called numbers.\n\nYou may close the Bingo Card Generator now, or generate more cards if you wish.".format(os.getcwd(), str(args['num']), args['card_colour'], args['dauber_colour'], args['dauber_shape'], args['excel']))
+    msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+    msgBox.exec_()
 
 def createCard(arguments):
     """Creates the HTML version of the card"""
@@ -396,7 +493,7 @@ $(document).ready(function() {
 '''
     if arguments['pdf']:
         print("Generating PDF's, please wait")
-    while total <= int(arguments['num'][0]):
+    while total <= int(arguments['num']):
         filename = str(total) + '-' + card_colour.strip('#') + '.html'
         html = open(filename, 'w')
         html.write(head1)
@@ -428,7 +525,10 @@ $(document).ready(function() {
             pdfPrint(filename, pdffile)
         current_count = total
         total += 1
-    print("{} cards written".format(str(current_count)))
+    if current_count == 1:
+        print("{} card written".format(str(current_count)))
+    elif current_count > 1:
+        print("{} cards written".format(str(current_count)))
 
 
 def genNums():
@@ -474,7 +574,7 @@ def pdfPrint(html_file, out_file):
     pdfkit.from_file(html_file, out_file, options=options)
 
 def grabNumbers(arguments):
-    num = int(arguments['num'][0])
+    num = int(arguments['num'])
     print("Extracting numbers from {:d} cards".format(num))
     total = 1
     if arguments['everything'] and not arguments['base_colour']:
@@ -566,6 +666,7 @@ def writeToExcel(number_of_csvs, base_filename, excel_name):
                 except ValueError:
                     pass
             worksheet.append(row)
+        readcsv.close()
         os.remove(csvfile)
     writer.save(excel_name)
     wb = load_workbook(excel_name)
@@ -662,9 +763,10 @@ def main():
 
     args = arg_parse.parse_args()
     all_args = vars(args)
+    all_args['num'] = all_args['num'][0]
     if all_args['excel'] and all_args['base_colour']:
         grabNumbers(all_args)
-        writeToExcel(all_args['num'][0], all_args['base_colour'], all_args['excel'])
+        writeToExcel(all_args['num'], all_args['base_colour'], all_args['excel'])
     elif all_args['excel'] and not all_args['base_colour']:
         print("The Excel option requires the -b, --base-colour value as well")
         raise SystemExit(0)
@@ -672,12 +774,12 @@ def main():
         all_args['pdf'] = True
         createCard(all_args)
         grabNumbers(all_args)
-        writeToExcel(all_args['num'][0], all_args['card_colour'], all_args['excel'])
+        writeToExcel(all_args['num'], all_args['card_colour'], all_args['excel'])
     elif all_args['everything'] and not all_args['excel']:
         all_args['pdf'] = True
         createCard(all_args)
         grabNumbers(all_args)
-        writeToExcel(all_args['num'][0], all_args['card_colour'], str(all_args['card_colour'] + '-cards.xlsx'))
+        writeToExcel(all_args['num'], all_args['card_colour'], str(all_args['card_colour'] + '-cards.xlsx'))
     else:
         createCard(all_args)
 
