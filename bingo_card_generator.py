@@ -25,30 +25,37 @@ import re
 import csv
 import os
 import pdfkit
+import sys
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, NamedStyle, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.formatting.rule import FormulaRule
 
 __author__ = 'Corey Forman'
-__date__ = '6 Sep 2021'
-__version__ = '2.0.0'
+__date__ = '14 Feb 2022'
+__version__ = '3.0.0'
 __description__ = 'Interactive Bingo Card and PDF Generator'
+__colour_groups__ = 'https://www.w3schools.com/colors/colors_groups.asp'
 
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(400, 219)
+        Dialog.resize(400, 241)
         self.dauber_shape = QtWidgets.QComboBox(Dialog)
-        self.dauber_shape.setGeometry(QtCore.QRect(140, 160, 111, 27))
+        self.dauber_shape.setGeometry(QtCore.QRect(140, 167, 131, 27))
         self.dauber_shape.setEditable(False)
         self.dauber_shape.setObjectName("dauber_shape")
         self.dauber_shape.addItem("")
         self.dauber_shape.addItem("")
         self.dauber_shape.addItem("")
+        self.dauber_shape.addItem("")
+        self.dauber_shape.addItem("")
+        self.dauber_shape.addItem("")
+        self.dauber_shape.addItem("")
+        self.dauber_shape.addItem("")
         self.dauber_shape_label = QtWidgets.QLabel(Dialog)
-        self.dauber_shape_label.setGeometry(QtCore.QRect(10, 163, 121, 21))
+        self.dauber_shape_label.setGeometry(QtCore.QRect(10, 170, 121, 21))
         self.dauber_shape_label.setToolTipDuration(-1)
         self.dauber_shape_label.setObjectName("dauber_shape_label")
         self.title_label = QtWidgets.QLabel(Dialog)
@@ -59,43 +66,61 @@ class Ui_Dialog(object):
         self.title_label.setFont(font)
         self.title_label.setAlignment(QtCore.Qt.AlignCenter)
         self.title_label.setObjectName("title_label")
-        self.dauber_colour = QtWidgets.QLineEdit(Dialog)
-        self.dauber_colour.setGeometry(QtCore.QRect(140, 120, 111, 31))
-        self.dauber_colour.setObjectName("dauber_colour")
         self.dauber_colour_label = QtWidgets.QLabel(Dialog)
-        self.dauber_colour_label.setGeometry(QtCore.QRect(10, 125, 121, 21))
+        self.dauber_colour_label.setGeometry(QtCore.QRect(10, 132, 121, 21))
         self.dauber_colour_label.setToolTipDuration(-1)
         self.dauber_colour_label.setFrameShadow(QtWidgets.QFrame.Plain)
         self.dauber_colour_label.setObjectName("dauber_colour_label")
-        self.card_colour = QtWidgets.QLineEdit(Dialog)
-        self.card_colour.setGeometry(QtCore.QRect(140, 80, 111, 31))
-        self.card_colour.setObjectName("card_colour")
         self.card_colour_label = QtWidgets.QLabel(Dialog)
-        self.card_colour_label.setGeometry(QtCore.QRect(10, 85, 121, 21))
+        self.card_colour_label.setGeometry(QtCore.QRect(10, 92, 121, 21))
         self.card_colour_label.setToolTipDuration(-1)
         self.card_colour_label.setFrameShadow(QtWidgets.QFrame.Plain)
         self.card_colour_label.setObjectName("card_colour_label")
         self.generate = QtWidgets.QPushButton(Dialog)
-        self.generate.setGeometry(QtCore.QRect(290, 40, 100, 31))
+        self.generate.setGeometry(QtCore.QRect(290, 47, 100, 31))
         self.generate.setDefault(False)
         self.generate.setObjectName("generate")
-        self.generate.clicked.connect(lambda: guiEverything(int(self.number.text()),self.card_colour.text(), self.dauber_colour.text(), self.dauber_shape.currentText()))
+        self.generate.clicked.connect(lambda: guiEverything(int(self.number.text()),self.card_colour.text(), self.dauber_colour.text(), self.dauber_shape.currentText(), self.getDirectory()))
         self.close = QtWidgets.QPushButton(Dialog)
-        self.close.setGeometry(QtCore.QRect(290, 80, 100, 31))
+        self.close.setGeometry(QtCore.QRect(290, 87, 100, 31))
         self.close.setObjectName("close")
         self.close.clicked.connect(QtWidgets.QApplication.instance().quit)
-        self.number = QtWidgets.QLineEdit(Dialog)
-        self.number.setGeometry(QtCore.QRect(140, 40, 111, 31))
-        self.number.setPlaceholderText("")
-        self.number.setObjectName("number")
         self.number_label = QtWidgets.QLabel(Dialog)
-        self.number_label.setGeometry(QtCore.QRect(10, 45, 121, 21))
+        self.number_label.setGeometry(QtCore.QRect(10, 52, 121, 21))
         self.number_label.setToolTipDuration(-1)
         self.number_label.setFrameShadow(QtWidgets.QFrame.Plain)
         self.number_label.setObjectName("number_label")
+        self.number = QtWidgets.QLineEdit(Dialog)
+        self.number.setGeometry(QtCore.QRect(140, 47, 131, 31))
+        self.number.setPlaceholderText("")
+        self.number.setObjectName("number")
+        self.card_colour = QtWidgets.QLineEdit(Dialog)
+        self.card_colour.setGeometry(QtCore.QRect(140, 87, 131, 31))
+        self.card_colour.setObjectName("card_colour")
+        self.dauber_colour = QtWidgets.QLineEdit(Dialog)
+        self.dauber_colour.setGeometry(QtCore.QRect(140, 127, 131, 31))
+        self.dauber_colour.setObjectName("dauber_colour")
+        self.version_label = QtWidgets.QLabel(Dialog)
+        self.version_label.setGeometry(QtCore.QRect(4, 23, 391, 20))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        font.setBold(False)
+        font.setWeight(50)
+        self.version_label.setFont(font)
+        self.version_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.version_label.setObjectName("version_label")
+        self.dauber_shape_label.setBuddy(self.dauber_shape)
+        self.dauber_colour_label.setBuddy(self.dauber_colour)
+        self.card_colour_label.setBuddy(self.card_colour)
+        self.number_label.setBuddy(self.number)
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
+        Dialog.setTabOrder(self.number, self.card_colour)
+        Dialog.setTabOrder(self.card_colour, self.dauber_colour)
+        Dialog.setTabOrder(self.dauber_colour, self.dauber_shape)
+        Dialog.setTabOrder(self.dauber_shape, self.generate)
+        Dialog.setTabOrder(self.generate, self.close)
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
@@ -103,47 +128,64 @@ class Ui_Dialog(object):
         self.dauber_shape.setCurrentText(_translate("Dialog", "square"))
         self.dauber_shape.setItemText(0, _translate("Dialog", "square"))
         self.dauber_shape.setItemText(1, _translate("Dialog", "circle"))
-        self.dauber_shape.setItemText(2, _translate("Dialog", "maple"))
+        self.dauber_shape.setItemText(2, _translate("Dialog", "maple-leaf"))
+        self.dauber_shape.setItemText(3, _translate("Dialog", "heart"))
+        self.dauber_shape.setItemText(4, _translate("Dialog", "star"))
+        self.dauber_shape.setItemText(5, _translate("Dialog", "moon"))
+        self.dauber_shape.setItemText(6, _translate("Dialog", "unicorn"))
+        self.dauber_shape.setItemText(7, _translate("Dialog", "clover"))
         self.dauber_shape_label.setToolTip(_translate("Dialog", "Choose the shape of the dauber"))
         self.dauber_shape_label.setText(_translate("Dialog", "Dauber Shape"))
         self.title_label.setText(_translate("Dialog", "Interactive Bingo Card and PDF Generator"))
         self.dauber_colour.setText(_translate("Dialog", "red"))
-        self.dauber_colour_label.setToolTip(_translate("Dialog", "Choose the shape of the dauber"))
+        self.dauber_colour_label.setToolTip(_translate("Dialog", "Choose the colour of the dauber"))
         self.dauber_colour_label.setText(_translate("Dialog", "Dauber Colour"))
         self.card_colour.setText(_translate("Dialog", "blue"))
-        self.card_colour_label.setToolTip(_translate("Dialog", "Choose the shape of the dauber"))
+        self.card_colour_label.setToolTip(_translate("Dialog", "Choose the colour of the card"))
         self.card_colour_label.setText(_translate("Dialog", "Card Colour"))
         self.generate.setText(_translate("Dialog", "Generate"))
         self.close.setText(_translate("Dialog", "Close"))
-        self.number_label.setToolTip(_translate("Dialog", "Choose the shape of the dauber"))
+        self.number_label.setToolTip(_translate("Dialog", "Choose the number of cards"))
         self.number_label.setText(_translate("Dialog", "# of Cards"))
+        self.card_colour.setPlaceholderText(_translate("Dialog", "blue"))
+        self.dauber_colour.setPlaceholderText(_translate("Dialog", "red"))
+        self.version_label.setText(_translate("Dialog", "v3.0.0 - 14 Feb 2022"))
 
+    def getDirectory(self):
+        button = QtWidgets.QFileDialog()
+        button.setFileMode(QtWidgets.QFileDialog.Directory)
+        button.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
+        chosenPath = button.getExistingDirectory(self, 'Select the output location for your cards ...', os.path.curdir)
+        return chosenPath
 
-def guiEverything(number, card_colour, dauber_colour, dauber_shape):
-    args = {'num': number, 'pdf': True, 'card_colour': card_colour, 'dauber_colour': dauber_colour, 'dauber_shape': dauber_shape, 'base_colour': card_colour, 'excel': str(card_colour + '-cards.xlsx'), 'everything': True}
+def guiEverything(number, card_colour, dauber_colour, dauber_shape, output):
+    args = {'num': number, 'pdf': True, 'card_colour': card_colour, 'dauber_colour': dauber_colour, 'dauber_shape': dauber_shape, 'base_colour': card_colour, 'output': output, 'excel': str(card_colour + '-cards.xlsx'), 'everything': True}
     createCard(args)
     grabNumbers(args)
-    writeToExcel(args['num'], args['card_colour'], args['excel'])
+    writeToExcel(args['num'], args['card_colour'], args['excel'], args['output'])
     msgBox = QtWidgets.QMessageBox()
     msgBox.setWindowTitle("Finished")
-    #msgBox.setWindowIcon(QtGui.QIcon("bingo.ico"))
-    msgBox.setText("All files created in {}\n\n {} {} card(s) created with a {}, {} shaped dauber.\n\n {} Excel file also created for tracking called numbers.\n\nYou may close the Bingo Card Generator now, or generate more cards if you wish.".format(os.getcwd(), str(args['num']), args['card_colour'], args['dauber_colour'], args['dauber_shape'], args['excel']))
+    msgBox.setText("All files created in {}\n\n{} {} card(s) created with a(n) {}, {} shaped dauber.\n\n{} Excel file also created for tracking called numbers.\n\nYou may close the Bingo Card Generator now, or generate more cards if you wish.".format(str(args['output']), str(args['num']), args['card_colour'], args['dauber_colour'], args['dauber_shape'], args['excel']))
     msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
     msgBox.exec_()
+
 
 def createCard(arguments):
     """Creates the HTML version of the card"""
     card_colour = arguments['card_colour']
     dauber_colour = arguments['dauber_colour']
     dauber_shape = arguments['dauber_shape']
+    output_path = arguments['output'] + os.sep
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)
     total = 1
-    head1 = '''<!DOCTYPE html>
+    open_head = '''<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 '''
-
-    head2 = '''<style>
+    open_style = "<style>"
+    page_css = '''
 .clear { width: 100%; clear: both; }
 .card { margin-top: 25px; float: left; width: 400px; height: auto; background-color: ''' + card_colour + '''; border-radius: 5px; padding: 10px; }
 .clear-card { position: absolute; }
@@ -157,16 +199,26 @@ def createCard(arguments):
 .number { padding: 20px 0; border: 2px solid ''' + card_colour + '''; background-color: #fff; font-family: "Roboto Condensed", sans-serif; font-weight: normal; height: 16px; }
 .number span { color: #000; font-size: 20px; }
 .number span:hover { text-shadow: 0 0 5px rgba(0,0,0,0.5); }
-.circle-dauber { width: 30px; height: 30px; background: ''' + dauber_colour + '''; border-radius: 50%; position: relative; top: 10%; left: 30%; padding: 0px; box-shadow: inset 0.1em 0.1em 0.1em 0 rgba(255,255,255,0.5), inset -0.1em -0.1em 0.1em 0 rgba(0,0,0,0.5); -ms-transform: translateY(-50%); transform: translateY(-30%); }
-.square-dauber { width: 30px; height: 30px; background: ''' + dauber_colour + '''; border-radius: 10%; position: relative; top: 36%; left: 30%; padding: 0px; box-shadow: inset 0.1em 0.1em 0.1em 0 rgba(255,255,255,0.5), inset -0.1em -0.1em 0.1em 0 rgba(0,0,0,0.5); -ms-transform: translateY(-50%); transform: translateY(-40%); }
-.maple-dauber { display: flex; align-items: center; justify-content: center; position: relative; margin-left: 0px; margin-right: 0px; margin-top: 11px; margin-bottom: 12px; }
-.maple-dauber:after { position: absolute; content: ""; width: 40px; height: 40px; background: #F00; -ms-transform: translateY(-20%); transform: translateY(-5%);
-    clip-path: polygon(47% 100%, 48% 70%, 25% 73%, 28% 65%, 7% 47%, 11% 44%, 8%     30%, 20% 32%, 23% 27%, 35% 40%, 32% 13%, 39% 16%, 50% 0, 61% 16%, 68% 13%,     65% 40%, 77% 27%, 80% 32%, 92% 30%, 89% 44%, 93% 47%, 72% 65%, 75% 73%, 52% 70%, 53% 100%); }
-</style>
-</head>
-<body>
 '''
 
+    circle_dauber = ".circle-dauber { width: 30px; height: 30px; background: " + dauber_colour + "; border-radius: 50%; position: relative; top: 10%; left: 30%; padding: 0px; box-shadow: inset 0.1em 0.1em 0.1em 0 rgba(255,255,255,0.5), inset -0.1em -0.1em 0.1em 0 rgba(0,0,0,0.5); -ms-transform: translateY(-50%); transform: translateY(-30%); }"
+    square_dauber = ".square-dauber { width: 30px; height: 30px; background: " + dauber_colour + "; border-radius: 10%; position: relative; top: 36%; left: 30%; padding: 0px; box-shadow: inset 0.1em 0.1em 0.1em 0 rgba(255,255,255,0.5), inset -0.1em -0.1em 0.1em 0 rgba(0,0,0,0.5); -ms-transform: translateY(-50%); transform: translateY(-40%); }"
+    maple_leaf_dauber = '''.maple-leaf-dauber { display: flex; align-items: center; justify-content: center; position: relative; margin-left: 0px; margin-right: 0px; margin-top: 11px; margin-bottom: 12px; }
+.maple-leaf-dauber:after { position: absolute; content: ""; width: 40px; height: 40px; background: ''' + dauber_colour + '''; -ms-transform: translateY(-20%); transform: translateY(-5%);
+   clip-path: polygon(47% 100%, 48% 70%, 25% 73%, 28% 65%, 7% 47%, 11% 44%, 8% 30%, 20% 32%, 23% 27%, 35% 40%, 32% 13%, 39% 16%, 50% 0, 61% 16%, 68% 13%, 65% 40%, 77% 27%, 80% 32%, 92% 30%, 89% 44%, 93% 47%, 72% 65%, 75% 73%, 52% 70%, 53% 100%); }'''
+    heart_dauber = '''.heart-dauber { display: flex; align-items: center; justify-content: center; margin-left: 12px; margin-right: 0px; margin-top: 0px; margin-bottom: 100px; width: 6.25em; height: 0.5em; position: relative; }
+.heart-dauber:before, .heart:after { content: ""; width: 1.1em; height: 1.8em; position: absolute; left: 2em; background: ''' + dauber_colour + '''; border-radius: 3em 3em 0 0; transform: rotate(-45deg); transform-origin: 40% 147%;}
+.heart-dauber:after { left: 0; transform: rotate(45deg); transform-origin: 60% 147%; }'''
+    star_dauber = '''.star-dauber { display: flex; align-items: center; justify-content: center; margin-left: -62px; margin-top: -26px; position: relative; color: ''' + dauber_colour + '''; width: 0px; height: 0px; border-right: 100px solid transparent; border-bottom: 70px solid; border-left: 100px solid transparent; transform: rotate(35deg) scale(0.25);}
+.star-dauber:before { border-bottom: 80px solid; border-left: 30px solid transparent; border-right: 30px solid transparent; position: absolute; height: 0; width: 0; top: -45px; left: -65px; display: block; content: ''; transform: rotate(-35deg); }
+.star-dauber:after { position: absolute; display: block; top: 3px; left: -105px; width: 0px; height: 0px; border-right: 100px solid transparent; border-bottom: 70px solid; border-left: 100px solid transparent; transform: rotate(-70deg); content: ''; }'''
+    moon_dauber = '''.moon-dauber { display: flex; position: relative; top: -19px; margin-left: 17%; padding: 0px; background-color: #000; border-radius: 50%; border: 2px solid #222; width: 50px; height: 50px; box-shadow: inset 0px 16px yellow, inset 0px 16px 1px 1px yellow; -moz-box-shadow: inset 0px 16px yellow, inset 0px 16px 1px 1px yellow; transform: rotate(-120deg); }'''
+    unicorn_dauber = '.unicorn-dauber::before { display: flex; align-items: center; top: -17px; margin-left: 17%; padding: 0px; position: relative; content: "\\01F984"; font-size: 40px;}'
+    clover_dauber = '.clover-dauber::before { align-items: center; top: -17px; margin-left: 0px; padding: 0px; position: relative; content: "\\01F340"; font-size: 40px;}'
+    daubers = { 'circle': circle_dauber, 'square': square_dauber, 'maple-leaf': maple_leaf_dauber, 'heart': heart_dauber, 'star': star_dauber, 'moon': moon_dauber, 'unicorn': unicorn_dauber, 'clover': clover_dauber }
+    close_style = "\n</style>\n"
+    close_head = "</head>\n"
+    open_body = "<body>\n"
     body = '''
 <div class="grid-container 1">
 
@@ -488,17 +540,13 @@ $(document).ready(function() {
   });
 });
 </script>
-</body>
-</html>
+
 '''
     if arguments['pdf']:
         print("Generating PDF's, please wait")
     while total <= int(arguments['num']):
-        filename = str(total) + '-' + card_colour.strip('#') + '.html'
-        html = open(filename, 'w')
-        html.write(head1)
-        html.write("<title>CARD " + str(total) + "</title>")
-        html.write(head2)
+        filename = output_path + str(total) + '-' + card_colour.strip('#') + '.html'
+        title = ("<title>CARD " + str(total) + "</title>\n")
         count = 1
         card_clear = ('<div class="card-number" id="clear-card">CARD ' +
                       str(total) +
@@ -508,6 +556,16 @@ $(document).ready(function() {
                       '; font-weight:bold\">FREE</span>\');')
         dauber_script = ('$(this).html(\'<div class=\"' +
                          dauber_shape + '-dauber\"></div>\');')
+        dauber_css = daubers[dauber_shape]
+        html = open(filename, 'w')
+        html.write(open_head)
+        html.write(title)
+        html.write(open_style)
+        html.write(page_css)
+        html.write(dauber_css)
+        html.write(close_style)
+        html.write(close_head)
+        html.write(open_body)
         html.write(card_clear)
         html.write(body)
         while count <= 6:
@@ -519,9 +577,10 @@ $(document).ready(function() {
         html.write(js2)
         html.write(dauber_script)
         html.write(js3)
+        html.write("</body></html>")
         html.close()
         if arguments['pdf']:
-            pdffile = str(total) + '-' + card_colour.strip('#') + '.pdf'
+            pdffile = output_path + str(total) + '-' + card_colour.strip('#') + '.pdf'
             pdfPrint(filename, pdffile)
         current_count = total
         total += 1
@@ -577,6 +636,7 @@ def grabNumbers(arguments):
     num = int(arguments['num'])
     print("Extracting numbers from {:d} cards".format(num))
     total = 1
+    output_path = arguments['output']
     if arguments['everything'] and not arguments['base_colour']:
         basecolour = arguments['card_colour']
     else:
@@ -585,11 +645,11 @@ def grabNumbers(arguments):
     if '.html' not in basecolour:
         basecolour = basecolour + '.html'
     while total <= num:
-        input_filename = str(total) + "-" + basecolour
+        input_filename = output_path + os.sep + str(total) + "-" + basecolour
         input_filename = input_filename.replace('#', '')
         input_file = open(input_filename, 'r')
         input_file = input_file.readlines()
-        output_filename = str(total) + "-" + basecolour.strip('.html') + '.csv'
+        output_filename = output_path + os.sep + str(total) + "-" + basecolour.strip('.html') + '.csv'
         output_file = open(output_filename, 'w+')
         full_sheet = []
         for line in input_file:
@@ -632,10 +692,11 @@ def grabNumbers(arguments):
         total += 1
     print("Extraction Complete")
 
-def writeToExcel(number_of_csvs, base_filename, excel_name):
+def writeToExcel(number_of_csvs, base_filename, excel_name, source_path):
     header = [' ', 'B', 'I', 'N', 'G', 'O',
               ' ', 'B', 'I', 'N', 'G', 'O',
               ' ', 'B', 'I', 'N', 'G', 'O']
+    excel_name = source_path + os.sep + excel_name
     call_sheet_header = ['B', 'I', 'N', 'G', 'O']
     call_sheet = NamedStyle(name="call_sheet")
     call_sheet.alignment.horizontal = 'center'
@@ -655,7 +716,7 @@ def writeToExcel(number_of_csvs, base_filename, excel_name):
     call_worksheet = writer.create_sheet('CALL')
     call_worksheet.append(call_sheet_header)
     for csvnum in range(1, number_of_csvs + 1):
-        csvfile = str(csvnum) + '-' + base_filename.strip('.html') + '.csv'
+        csvfile = source_path + os.sep + str(csvnum) + '-' + base_filename.strip('.html') + '.csv'
         worksheet = writer.create_sheet(str(csvnum))
         readcsv = open(csvfile, 'r', newline='', encoding='utf-8')
         reader = csv.reader(readcsv)
@@ -751,22 +812,64 @@ def writeToExcel(number_of_csvs, base_filename, excel_name):
 
 def main():
     """Parse arguments for PDF, card and dauber colour, and dauber shape"""
-    arg_parse = argparse.ArgumentParser(description='Interactive Bingo Card and PDF Generator v' + str(__version__), formatter_class=argparse.RawTextHelpFormatter)
-    arg_parse.add_argument('num', metavar='<# of cards>', help='Number of cards to generate or convert', type=int, nargs=1)
-    arg_parse.add_argument('-p', '--pdf', action='store_true', help='Convert the generated HTML file to a PDF')
-    arg_parse.add_argument('-c', '--card-colour', help='Colour for the card', default='blue')
-    arg_parse.add_argument('-d', '--dauber-colour', help='Colour for the dauber', default='red')
-    arg_parse.add_argument('-s', '--dauber-shape', help='Shape of the dauber [square|circle|maple]', default='circle')
-    arg_parse.add_argument('-b', '--base-colour', help='Base colour for the HTML files (ie: 1-blue.html = blue)')
-    arg_parse.add_argument('-x', '--excel', metavar='filename', help='Output all CSVs to a single Excel Workbook - requires -b')
-    arg_parse.add_argument('-e', '--everything', help='Create HTML files, PDF\'s, and Spreadsheet, requires -c, -d, and -s for customization', action='store_true')
+    arg_parse = argparse.ArgumentParser(
+        description='Interactive Bingo Card and PDF Generator v' + str(__version__),
+        epilog="If you'd like to see a few other color options, you can visit:\n" + __colour_groups__,
+        formatter_class=argparse.RawTextHelpFormatter)
+    arg_parse.add_argument('-v', '--version', action='version', version='%(prog)s ' + str(__version__))
+    group = arg_parse.add_argument_group(title='positional arguments',
+        description='''NUM_OF_CARDS
+
+Customization options:
+
+-e, --everything              Creates HTML files, PDF's and spreadsheet - use -c, -d, and -s for desired customization
+                              otherwise your cards will be set to default values.
+-p, --pdf                     Convert generated HTML files to PDFs
+-o, --output <output_dir>     Choose output directory
+-c, --card-colour <colour>    Colour for the card - default is BLUE
+-d, --dauber-colour <colour>  Colour for the dauber - default is RED
+-s, --dauber-shape <shape>    Shape for the dauber - default is CIRCLE
+                              Options are: square, circle, maple-leaf, heart, star, moon, unicorn, clover
+''')
+    group.add_argument('-p', '--pdf', action='store_true', help=argparse.SUPPRESS)
+    group.add_argument('-o', '--output', metavar='', help=argparse.SUPPRESS, required=True)
+    group.add_argument('num', metavar='', help=argparse.SUPPRESS, type=int, nargs=1)
+    group.add_argument('-c', '--card-colour', help=argparse.SUPPRESS, default='blue')
+    group.add_argument('-d', '--dauber-colour', help=argparse.SUPPRESS, default='red')
+    group.add_argument('-s', '--dauber-shape', help=argparse.SUPPRESS,
+        choices=['square','circle','maple-leaf','heart','star','moon','unicorn','clover'], default='circle')
+    group.add_argument('-b', '--base-colour', help=argparse.SUPPRESS)  #help='Base colour for the HTML files (ie: 1-blue.html = blue)')
+    group.add_argument('-x', '--excel', help=argparse.SUPPRESS)  #help='Output all CSVs to a single Excel Workbook - requires -b')
+    group.add_argument('-e', '--everything', help=argparse.SUPPRESS, action='store_true')
+
+#    """Parse arguments for PDF, card and dauber colour, and dauber shape"""
+#    arg_parse = argparse.ArgumentParser(
+#        description='Interactive Bingo Card and PDF Generator v' + str(__version__),
+#        epilog="If you'd like to see a few other color options, you can visit:\n" + __colour_groups__,
+#        formatter_class=argparse.RawTextHelpFormatter)
+#    arg_parse.add_argument('-v', '--version', action='version', version='%(prog)s ' + str(__version__))
+#    arg_parse.add_argument('-p', '--pdf', action='store_true', help='Convert the generated HTML file to a PDF')
+#    arg_parse.add_argument('-o', '--output', metavar='OUTPUT_DIR', help='Output directory, will be created if it does not exist', required=True)
+#    arg_parse.add_argument('num', metavar='NUM_OF_CARDS', help='Number of cards to generate or convert', type=int, nargs=1)
+#    arg_parse.add_argument('-c', '--card-colour', help='Colour for the card - default is BLUE', default='blue')
+#    arg_parse.add_argument('-d', '--dauber-colour', help='Colour for the dauber - default is RED', default='red')
+#    arg_parse.add_argument('-s', '--dauber-shape', help='Shape of the dauber - default is CIRCLE',
+#        choices=['square','circle','maple-leaf','heart','star','moon','unicorn','clover'], default='circle')
+#    arg_parse.add_argument('-b', '--base-colour', help=argparse.SUPPRESS)  #help='Base colour for the HTML files (ie: 1-blue.html = blue)')
+#    arg_parse.add_argument('-x', '--excel', metavar='FILENAME', help=argparse.SUPPRESS)  #help='Output all CSVs to a single Excel Workbook - requires -b')
+#    arg_parse.add_argument('-e', '--everything',
+#        help='Create HTML files, PDF\'s, and Spreadsheet, use -c, -d, and -s for desired customization,\notherwise your cards will be set to default values.',
+#        action='store_true')
+    if len(sys.argv[1:]) == 0:
+        arg_parse.print_help()
+        arg_parse.exit()
 
     args = arg_parse.parse_args()
     all_args = vars(args)
     all_args['num'] = all_args['num'][0]
     if all_args['excel'] and all_args['base_colour']:
         grabNumbers(all_args)
-        writeToExcel(all_args['num'], all_args['base_colour'], all_args['excel'])
+        writeToExcel(all_args['num'], all_args['base_colour'], all_args['excel'], all_args['output'])
     elif all_args['excel'] and not all_args['base_colour']:
         print("The Excel option requires the -b, --base-colour value as well")
         raise SystemExit(0)
@@ -774,14 +877,15 @@ def main():
         all_args['pdf'] = True
         createCard(all_args)
         grabNumbers(all_args)
-        writeToExcel(all_args['num'], all_args['card_colour'], all_args['excel'])
+        writeToExcel(all_args['num'], all_args['card_colour'], all_args['excel'], all_args['output'])
     elif all_args['everything'] and not all_args['excel']:
         all_args['pdf'] = True
         createCard(all_args)
         grabNumbers(all_args)
-        writeToExcel(all_args['num'], all_args['card_colour'], str(all_args['card_colour'] + '-cards.xlsx'))
+        writeToExcel(all_args['num'], all_args['card_colour'], str(all_args['card_colour'] + '-cards.xlsx'), all_args['output'])
     else:
         createCard(all_args)
+
 
 if __name__ == '__main__':
     main()
