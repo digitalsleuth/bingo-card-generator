@@ -1,18 +1,35 @@
 # bingo-card-generator
-Interactive Bingo Card and PDF Generator
+Interactive and PDF Bingo Card Generator
 
-Tool to generate a clickable bingo card for virtual bingo events, and generate PDF's for printing these cards
-Requires pdfkit and wkhtmltopdf for OS it's being run on (Windows requires an exe, linux install from pkg manager)
+Tool to generate a clickable, interactive bingo cards for virtual bingo events, and generate PDF's for offline use (for those who would rather print and use paper).  
+Requires pdfkit, Pillow, and wkhtmltopdf (wkhtmltopdf depends based on OS it's being run on (Windows requires an exe, linux install from pkg manager))
 
-This script currently will only generate 6 cards on one sheet (2 rows of 3 cards).
+This tool generates 6 cards on one sheet (2 rows of 3 cards).
 
-While not normally necessary for CSS, the float values are required for the proper printing of the PDF's
-If these are removed/modified, you can expect your PDF's to be off-center or misaligned.
+Application (exe) Icon made by Freepik (https://www.freepik.com) from Flaticon (www.flaticon.com)
 
-Icon made by Freepik (https://www.freepik.com) from Flaticon (www.flaticon.com)
+## Options  
+
+There are many options available:
+
+Choose a custom logo to use as a dauber:  
+- when chosen, a JPG or PNG must be supplied, and it will be convered to 48x48  
+- for best results, it should be square to begin with  
+
+Allow the player to choose their own dauber during play:  
+- when allowed, the player can choose their own digital dauber for each game  
+- cannot be changed after selected during gameplay, to avoid confusion  
+- once card is "cleared", a new dauber can be chosen  
+- option to allow, not allow can be defined prior to card generation  
+  
+Allows the generator of the card to choose the card colour and, if applicable, the dauber colour:  
+- depending on the dauber, the colour can be chosen, but some daubers cannot be changed  
+- the circle, square, maple leaf, and heart can be colour-adjusted  
+  
+Generates a spreadsheet to track all numbers called, and which cards actually have those numbers:  
+- gives the ability to confirm an actual "BINGO" quickly, by selecting the card number and visually identifying the "shape"
+- when numbers are called, type them into the "CALL" sheet, and they will highlight on each card number  
+  
 
 Standalone executable made using pyinstaller:
 `pyinstaller -F --icon=bingo.ico bingo-card-generator.py`
-
-TO DO:
-- Make number of cards per sheet customizable
