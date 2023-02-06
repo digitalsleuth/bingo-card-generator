@@ -797,9 +797,9 @@ def pdfPrint(html_file, out_file):
         'page-height': '11in',
         'orientation': 'Landscape',
         'margin-top': '0.5in',
-        'margin-right': '0.25in',
+        'margin-right': '0in',
         'margin-bottom': '0.5in',
-        'margin-left': '0.25in',
+        'margin-left': '0in',
         'quiet': ''
     }
     with open(html_file, "r") as html:
