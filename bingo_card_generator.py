@@ -35,9 +35,10 @@ from openpyxl.utils import get_column_letter
 from openpyxl.formatting.rule import FormulaRule
 
 __author__ = 'Corey Forman'
-__date__ = '05 Feb 2023'
-__version__ = '4.0.0'
-__description__ = 'Interactive Bingo Card and PDF Generator'
+__date__ = '06 Feb 2023'
+__version__ = '4.1.0'
+__description__ = 'Interactive Bingo Card Generator'
+__source__ = 'https://github.com/digitalsleuth/bingo-card-generator'
 __colour_groups__ = 'https://www.w3schools.com/colors/colors_groups.asp'
 
 
@@ -46,20 +47,10 @@ class Ui_Dialog(object):
         Palette = QtGui.QPalette()
         Palette.setColor(Palette.ColorRole.Window, QtGui.QColor('#DDDDDD'))
         Dialog.setObjectName("Dialog")
-        Dialog.setFixedSize(400, 300)
+        Dialog.setFixedSize(390, 260)
         Dialog.setPalette(Palette)
-        self.allow_select = QtWidgets.QCheckBox("",self)
-        self.allow_select.setObjectName("allow_select")
-        self.allow_select.setLayoutDirection(QtCore.Qt.RightToLeft)
-        self.allow_select.stateChanged.connect(self.selectBox)
-        self.allow_select.setGeometry(12, 235, 178, 40)
-        self.allow_select.setStyleSheet("QCheckBox::indicator {width: 18px; height: 18px;}")
-        self.allow_select_label = QtWidgets.QLabel(Dialog)
-        self.allow_select_label.setGeometry(QtCore.QRect(12, 235, 140, 40))
-        self.allow_select_label.setToolTipDuration(-1)
-        self.allow_select_label.setObjectName("allow_select_label")
         self.dauber_shape = QtWidgets.QComboBox(Dialog)
-        self.dauber_shape.setGeometry(QtCore.QRect(140, 167, 131, 27))
+        self.dauber_shape.setGeometry(QtCore.QRect(134, 167, 131, 27))
         self.dauber_shape.setEditable(False)
         self.dauber_shape.setObjectName("dauber_shape")
         self.dauber_shape.addItem("")
@@ -79,7 +70,7 @@ class Ui_Dialog(object):
         self.dauber_shape_label.setToolTipDuration(-1)
         self.dauber_shape_label.setObjectName("dauber_shape_label")
         self.title_label = QtWidgets.QLabel(Dialog)
-        self.title_label.setGeometry(QtCore.QRect(4, 2, 391, 20))
+        self.title_label.setGeometry(QtCore.QRect(4, 2, 388, 20))
         font = QtGui.QFont()
         font.setBold(True)
         font.setWeight(75)
@@ -94,8 +85,14 @@ class Ui_Dialog(object):
         self.card_colour_label.setGeometry(QtCore.QRect(10, 92, 121, 21))
         self.card_colour_label.setToolTipDuration(-1)
         self.card_colour_label.setObjectName("card_colour_label")
+        self.allow_select = QtWidgets.QPushButton("Enable Choices", Dialog)
+        self.allow_select.setObjectName("allow_select")
+        self.allow_select.setCheckable(True)
+        self.allow_select.clicked.connect(self.selectBox)
+        self.allow_select.setGeometry(QtCore.QRect(280, 127, 100, 31))
+        self.allow_select.setStyleSheet("background-color: rgb(221, 221, 221)")
         self.select_logo = QtWidgets.QPushButton(Dialog)
-        self.select_logo.setGeometry(QtCore.QRect(290, 167, 100, 27))
+        self.select_logo.setGeometry(QtCore.QRect(280, 167, 100, 27))
         self.select_logo.setDefault(False)
         self.select_logo.setObjectName("select_logo")
         self.select_logo.clicked.connect(self.selectLogo)
@@ -105,14 +102,14 @@ class Ui_Dialog(object):
         self.select_result.setObjectName("select_result")
         self.select_result.setReadOnly(True)
         self.select_result.setVisible(False)
-        self.select_result.setGeometry(QtCore.QRect(9, 205, 382, 30))
+        self.select_result.setGeometry(QtCore.QRect(8, 205, 372, 30))
         self.generate = QtWidgets.QPushButton(Dialog)
-        self.generate.setGeometry(QtCore.QRect(290, 47, 100, 31))
+        self.generate.setGeometry(QtCore.QRect(280, 47, 100, 31))
         self.generate.setDefault(False)
         self.generate.setObjectName("generate")
         self.generate.clicked.connect(lambda: guiEverything(int(self.number.text()),self.card_colour.text(), self.dauber_colour.text(), self.dauber_shape.currentText(), self.getDirectory(), self.selectLogo(), self.selectBox()))
         self.close = QtWidgets.QPushButton(Dialog)
-        self.close.setGeometry(QtCore.QRect(290, 87, 100, 31))
+        self.close.setGeometry(QtCore.QRect(280, 87, 100, 31))
         self.close.setObjectName("close")
         self.close.clicked.connect(QtWidgets.QApplication.instance().quit)
         self.number_label = QtWidgets.QLabel(Dialog)
@@ -120,11 +117,11 @@ class Ui_Dialog(object):
         self.number_label.setToolTipDuration(-1)
         self.number_label.setObjectName("number_label")
         self.number = QtWidgets.QLineEdit(Dialog)
-        self.number.setGeometry(QtCore.QRect(140, 47, 131, 31))
+        self.number.setGeometry(QtCore.QRect(134, 47, 131, 31))
         self.number.setPlaceholderText("")
         self.number.setObjectName("number")
         self.card_colour = QtWidgets.QLineEdit(Dialog)
-        self.card_colour.setGeometry(QtCore.QRect(140, 87, 131, 31))
+        self.card_colour.setGeometry(QtCore.QRect(134, 87, 131, 31))
         self.card_colour.setObjectName("card_colour")
         self.card_colour_picker = QtWidgets.QPushButton(Dialog)
         self.card_colour_picker.setObjectName("card_colour_picker")
@@ -132,7 +129,7 @@ class Ui_Dialog(object):
         self.card_colour_picker.setGeometry(QtCore.QRect(110, 92, 20, 20))
         self.card_colour_picker.setStyleSheet("background-color: blue; border: 1px solid black")
         self.dauber_colour = QtWidgets.QLineEdit(Dialog)
-        self.dauber_colour.setGeometry(QtCore.QRect(140, 127, 131, 31))
+        self.dauber_colour.setGeometry(QtCore.QRect(134, 127, 131, 31))
         self.dauber_colour.setObjectName("dauber_colour")
         self.dauber_colour.setEnabled(False)
         self.dauber_colour_picker = QtWidgets.QPushButton(Dialog)
@@ -142,32 +139,38 @@ class Ui_Dialog(object):
         self.dauber_colour_picker.setStyleSheet("background-color: red; border: 1px solid black")
         self.dauber_colour_picker.setEnabled(False)
         self.version_label = QtWidgets.QLabel(Dialog)
-        self.version_label.setGeometry(QtCore.QRect(4, 19, 391, 20))
+        self.version_label.setGeometry(QtCore.QRect(4, 19, 388, 20))
         font = QtGui.QFont()
         font.setPointSize(10)
         font.setBold(False)
         font.setWeight(50)
-        self.allow_select.setFont(font)
-        self.allow_select_label.setFont(font)
         self.version_label.setFont(font)
         self.version_label.setAlignment(QtCore.Qt.AlignCenter)
         self.version_label.setObjectName("version_label")
+        self.source_label = QtWidgets.QLabel(Dialog)
+        self.source_label.setGeometry(QtCore.QRect(4, 240, 372, 20))
+        self.source_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.source_label.setObjectName("source_label")
+        self.source_label.setOpenExternalLinks(True)
+        self.source_label.setParent(self)
+        linkTemplate = '<a href={0}>{1}</a>'
+        self.source_label.setText(linkTemplate.format(__source__, 'Source @ GitHub.com/digitalsleuth'))
         self.dauber_shape_label.setBuddy(self.dauber_shape)
         self.dauber_colour_label.setBuddy(self.dauber_colour)
         self.card_colour_label.setBuddy(self.card_colour)
         self.number_label.setBuddy(self.number)
-        self.allow_select_label.setBuddy(self.allow_select)
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
         Dialog.setTabOrder(self.number, self.card_colour)
         Dialog.setTabOrder(self.card_colour, self.dauber_colour)
         Dialog.setTabOrder(self.dauber_colour, self.dauber_shape)
-        Dialog.setTabOrder(self.dauber_shape, self.select_logo)
-        Dialog.setTabOrder(self.select_logo, self.allow_select)
-        Dialog.setTabOrder(self.allow_select, self.generate)
+        Dialog.setTabOrder(self.dauber_shape, self.generate)
         Dialog.setTabOrder(self.generate, self.close)
+        Dialog.setTabOrder(self.close, self.allow_select)
+        Dialog.setTabOrder(self.allow_select, self.select_logo)
 
     def retranslateUi(self, Dialog):
+        """Translate layout of the UI components"""
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Interactive Bingo Card Generator"))
         self.dauber_shape.setCurrentText(_translate("Dialog", "Circle"))
@@ -184,7 +187,7 @@ class Ui_Dialog(object):
         self.dauber_shape.setItemText(10, _translate("Dialog", "X-Mark"))
         self.dauber_shape_label.setToolTip(_translate("Dialog", "Choose the shape of the dauber"))
         self.dauber_shape_label.setText(_translate("Dialog", "Dauber Shape"))
-        self.title_label.setText(_translate("Dialog", "Interactive Bingo Card and PDF Generator"))
+        self.title_label.setText(_translate("Dialog", "Interactive Bingo Card Generator"))
         self.dauber_colour.setText(_translate("Dialog", "Red"))
         self.dauber_colour_label.setToolTip(_translate("Dialog", "Choose the colour of the dauber"))
         self.dauber_colour_label.setText(_translate("Dialog", "Dauber Colour"))
@@ -196,21 +199,21 @@ class Ui_Dialog(object):
         self.close.setText(_translate("Dialog", "Close"))
         self.number_label.setToolTip(_translate("Dialog", "Choose the number of cards"))
         self.number_label.setText(_translate("Dialog", "# of Cards"))
-        self.allow_select.setText(_translate("Dialog", "Allow dauber selection?"))
-        self.allow_select_label.setToolTip(_translate("Dialog", "Allow the player to change their dauber after generation of card"))
         self.card_colour.setPlaceholderText(_translate("Dialog", "Blue"))
         self.dauber_colour.setPlaceholderText(_translate("Dialog", "Red"))
         self.version_label.setText(_translate("Dialog", __version__ + " - " + __date__))
 
     def getDirectory(self):
-        button = QtWidgets.QFileDialog()
-        button.setFileMode(QtWidgets.QFileDialog.Directory)
-        button.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
-        chosenPath = button.getExistingDirectory(self, 'Select the output location for your cards ...', os.path.curdir)
+        """Get the output directory"""
+        dialogBox = QtWidgets.QFileDialog()
+        dialogBox.setFileMode(QtWidgets.QFileDialog.Directory)
+        dialogBox.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
+        chosenPath = dialogBox.getExistingDirectory(self, 'Select the output location for your cards ...', os.path.curdir)
 
         return chosenPath
 
     def selectLogo(self):
+        """Determine if the Logo option is selected and provide the result"""
         index = self.dauber_shape.currentIndex()
         if ((index == 4) and self.select_result.text() == ''):
             selected_file, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select the image you wish to use...","", "Image Files (*.jpg *.png)")
@@ -223,12 +226,16 @@ class Ui_Dialog(object):
         return selected_file
 
     def selectBox(self):
+        """Used to determine if the dauber selection box is enabled"""
         if self.allow_select.isChecked():
+            self.allow_select.setStyleSheet("background-color: lightblue")
             return True
         else:
+            self.allow_select.setStyleSheet("background-color: rgb(221, 221, 221)")
             return False
 
     def on_Select(self, index):
+        """Modifies display of UI components depending on dropdown selection"""
         self.select_logo.setEnabled(index == 4)
         self.select_logo.setVisible(index == 4)
         self.select_result.setVisible(index == 4)
@@ -236,6 +243,7 @@ class Ui_Dialog(object):
         self.dauber_colour_picker.setEnabled(index in (1, 3, 5, 7))
 
     def dauberColourPicker(self):
+        """Colour picker for choosing the dauber colour"""
         dauberColour = QtWidgets.QColorDialog.getColor()
         if dauberColour.isValid():
             self.dauber_colour_picker.setStyleSheet('QPushButton { background-color: ' + dauberColour.name() + '; border: 1px solid black}')
@@ -245,6 +253,7 @@ class Ui_Dialog(object):
             self.dauber_colour.setText('Red')
 
     def cardColourPicker(self):
+        """Colour picker for choosing the card colour"""
         cardColour = QtWidgets.QColorDialog.getColor()
         if cardColour.isValid():
             self.card_colour_picker.setStyleSheet('QPushButton { background-color: ' + cardColour.name() + '; border: 1px solid black}')
@@ -254,6 +263,7 @@ class Ui_Dialog(object):
             self.card_colour.setText('Blue')
 
 def guiEverything(number, card_colour, dauber_colour, dauber_shape, output, logo, allow_select):
+    """Takes all input from the GUI and passes it to the various functions"""
     args = {'num': number, 'pdf': True, 'card_colour': card_colour, 'dauber_colour': dauber_colour, 'dauber_shape': dauber_shape, 'logo': logo, 'allow_select': allow_select, 'base_colour': card_colour, 'output': output, 'excel': str((card_colour).strip("#") + '-cards.xlsx'), 'everything': True}
     createCard(args)
     grabNumbers(args)
@@ -365,7 +375,7 @@ text-align: center;
   <option value="star">&#11088; Star</option>
   <option value="unicorn">&#129412; Unicorn</option>
   <option value="x-mark">&#10060; X Marks The Spot</option>
-</select>\n
+</select> 
 '''
     else:
         select_box = '\n'
@@ -710,9 +720,7 @@ function toggle(id) {
         card_clear = ('<div class="card-number" id="clear-card"><button class="button button-clear">CARD ' +
                       str(total) +
                       ' - CLICK HERE TO CLEAR CARD</button></div>\n')
-        free_space = ('$(\".col-13\").html(\'<span style=\"color:' +
-                      card_colour +
-                      '; font-weight:bold\">FREE</span>\');')
+        free_space = f'$(\".col-13\").html(\'<span style=\"color: {card_colour}; font-weight:bold\">FREE</span>\');'
         html = open(filename, 'w')
         html.write(open_head)
         html.write(title)
@@ -726,7 +734,7 @@ function toggle(id) {
         html.write(body)
         while count <= 6:
             nums = str(genNums())
-            html.write('$card' + str(count) + ' = ' + nums + ';\n')
+            html.write(f'$card{str(count)} = {nums};\n')
             count += 1
         html.write(js1)
         html.write(free_space)
@@ -740,12 +748,13 @@ function toggle(id) {
         current_count = total
         total += 1
     if current_count == 1:
-        print("{} card written".format(str(current_count)))
+        print(f"{str(current_count)} card written")
     elif current_count > 1:
-        print("{} cards written".format(str(current_count)))
+        print(f"{str(current_count)} cards written")
 
 
 def convertLogo(logo):
+    """When logo is chosen, will load, resize, then add the logo to the HTML"""
     file_name, file_ext = os.path.splitext(logo)
     basewidth = 40
     img = Image.open(logo)
@@ -804,6 +813,10 @@ def pdfPrint(html_file, out_file):
     }
     with open(html_file, "r") as html:
         html = html.read().replace(' - CLICK HERE TO CLEAR CARD','')
+        html = html.replace('<a href="https://github.com/digitalsleuth/bingo-card-generator" class="footer"></a>',
+                            '<div align="center" style="font-family: Roboto Condensed">https://github.com/digitalsleuth/bingo-card-generator</div>')
+        html = html.replace('<select','<!-- <select').replace('</select>','</select> -->')
+
     html_back = f'{html_file}.html'
     with open(html_back, "w") as backup:
         backup.write(html)
@@ -811,8 +824,9 @@ def pdfPrint(html_file, out_file):
     os.remove(html_back)
 
 def grabNumbers(arguments):
+    """Extracts the generated numbers from the HTML files to forward to other functions"""
     num = int(arguments['num'])
-    print("Extracting numbers from {:d} cards".format(num))
+    print(f"Extracting numbers from {num} cards")
     total = 1
     output_path = arguments['output']
     if arguments['everything'] and not arguments['base_colour']:
@@ -823,11 +837,11 @@ def grabNumbers(arguments):
     if '.html' not in basecolour:
         basecolour = basecolour + '.html'
     while total <= num:
-        input_filename = output_path + os.sep + str(total) + "-" + basecolour
+        input_filename = f'{output_path}{os.sep}{str(total)}-{basecolour}'
         input_filename = input_filename.replace('#', '')
         input_file = open(input_filename, 'r')
         input_file = input_file.readlines()
-        output_filename = output_path + os.sep + str(total) + "-" + basecolour.strip('.html') + '.csv'
+        output_filename = f'{output_path}{os.sep}{str(total)}-{basecolour.strip(".html")}.csv'
         output_file = open(output_filename, 'w+')
         full_sheet = []
         for line in input_file:
@@ -871,6 +885,7 @@ def grabNumbers(arguments):
     print("Extraction Complete")
 
 def writeToExcel(number_of_csvs, base_filename, excel_name, source_path):
+    """Takes the bingo numbers and card numbers and writes the data to an Excel file"""
     header = [' ', 'B', 'I', 'N', 'G', 'O',
               ' ', 'B', 'I', 'N', 'G', 'O',
               ' ', 'B', 'I', 'N', 'G', 'O']
@@ -894,7 +909,7 @@ def writeToExcel(number_of_csvs, base_filename, excel_name, source_path):
     call_worksheet = writer.create_sheet('CALL')
     call_worksheet.append(call_sheet_header)
     for csvnum in range(1, number_of_csvs + 1):
-        csvfile = (source_path + os.sep + str(csvnum) + '-' + base_filename.strip('.html') + '.csv').lower()
+        csvfile = (f'{source_path}{os.sep}{str(csvnum)}-{base_filename.strip(".html")}.csv').lower()
         worksheet = writer.create_sheet(str(csvnum))
         readcsv = open(csvfile, 'r', newline='', encoding='utf-8')
         reader = csv.reader(readcsv)
@@ -991,7 +1006,7 @@ def writeToExcel(number_of_csvs, base_filename, excel_name, source_path):
 def main():
     """Parse arguments for PDF, card and dauber colour, and dauber shape"""
     arg_parse = argparse.ArgumentParser(
-        description='Interactive Bingo Card and PDF Generator v' + str(__version__),
+        description='Interactive Bingo Card Generator v' + str(__version__),
         epilog="If you'd like to see a few other color options, you can visit:\n" + __colour_groups__,
         formatter_class=argparse.RawTextHelpFormatter)
     arg_parse.add_argument('-v', '--version', action='version', version='%(prog)s ' + str(__version__))
@@ -1000,15 +1015,15 @@ def main():
 
 Customization options:
 
--e, --everything              Creates HTML files, PDF's and spreadsheet - use -c, -d, and -s for desired customization
+-e, --everything              Creates HTML files, PDF's and spreadsheet - use -c, -d, and -s for desired customization 
                               otherwise your cards will be set to default values.
 -p, --pdf                     Convert generated HTML files to PDFs
 -o, --output <output_dir>     Choose output directory
 -c, --card-colour <colour>    Colour for the card - default is BLUE
 -d, --dauber-colour <colour>  Colour for the dauber - default is RED
 -s, --dauber-shape <shape>    Shape for the dauber - default is CIRCLE
-                              Options are: square, circle, maple-leaf, heart, star, moon, unicorn, clover, logo, checkmark, x-mark
--l, --logo <image_file>       If the logo is chosen for a shape, this is used to point to an image, JPG or PNG to use as a dauber
+                              Options are: checkmark, circle, clover, heart, logo, maple-leaf, moon, square, star, unicorn, x-mark
+-l, --logo <image_file>       If the logo is chosen for a shape, this is used to point to an image file (JPG or PNG) to use as a dauber
 -a, --allow-select            If chosen, provides a dropdown box on the HTML card for the player to change their dauber at will
 ''')
     group.add_argument('-p', '--pdf', action='store_true', help=argparse.SUPPRESS)
@@ -1046,7 +1061,7 @@ Customization options:
         all_args['pdf'] = True
         createCard(all_args)
         grabNumbers(all_args)
-        writeToExcel(all_args['num'], all_args['card_colour'], str(all_args['card_colour'] + '-cards.xlsx'), all_args['output'])
+        writeToExcel(all_args['num'], all_args['card_colour'], str(f'{all_args["card_colour"]}-cards.xlsx'), all_args['output'])
     else:
         createCard(all_args)
 
