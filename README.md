@@ -44,20 +44,26 @@ There are many options available:
 ## Examples  
 ### Type in the colour name
 
-
-![Select-Bingo-Card-Options](https://user-images.githubusercontent.com/62841822/218927016-3f07aaaf-8fe3-4aa5-b673-52e8461341ad.png)
-
-![Lime-Maple-Leaf-Example](https://user-images.githubusercontent.com/62841822/218927613-a9ea6036-d591-4df9-bc10-58b54f37db93.png)
+<p align="center">
+<img src="https://user-images.githubusercontent.com/62841822/218927016-3f07aaaf-8fe3-4aa5-b673-52e8461341ad.png"></img>  
+<img src="https://user-images.githubusercontent.com/62841822/218927613-a9ea6036-d591-4df9-bc10-58b54f37db93.png"></img>
+</p>
 
 ### Use the Colour Picker  
 
-![Use-Colour-Picker](https://user-images.githubusercontent.com/62841822/218927839-c4189bc8-61ce-4039-904d-ead4da039c6f.png)
+<p align="center">
+<img src="https://user-images.githubusercontent.com/62841822/218927839-c4189bc8-61ce-4039-904d-ead4da039c6f.png"></img>
+</p>
 
 ### Choose your own logo  
-![Choose-Logo](https://user-images.githubusercontent.com/62841822/218928230-40a6c420-03f7-4f26-af68-e82f1c597617.png)  
-![ChooseLogo-2](https://user-images.githubusercontent.com/62841822/216872447-313497f9-541d-4552-baf2-0b57b69f768f.png)
+
+<p align="center">
+<img src="https://user-images.githubusercontent.com/62841822/218928230-40a6c420-03f7-4f26-af68-e82f1c597617.png"></img>  
+<img src="https://user-images.githubusercontent.com/62841822/216872447-313497f9-541d-4552-baf2-0b57b69f768f.png"></img>
+</p>
 
 ### Allow the players to choose their own dauber  
-![ChooseDauber](https://user-images.githubusercontent.com/62841822/216872552-18e31d86-42ff-488e-ab81-5bf096aee78a.png)
-
+<p align="center">
+<img src="https://user-images.githubusercontent.com/62841822/216872552-18e31d86-42ff-488e-ab81-5bf096aee78a.png"></img>
+</p>
 
