@@ -7,7 +7,7 @@ basedir = os.path.dirname(__file__)
 
 try:
     from ctypes import windll
-    AppId = 'digitalsleuth.interactive-bingo-card-generator.gui.v4-1-0'
+    AppId = 'digitalsleuth.interactive-bingo-card-generator.gui.v5-0-0'
     windll.shell32.SetCurrentProcessExplicitAppUserModelID(AppId)
 except ImportError:
     pass
@@ -19,7 +19,7 @@ class BingoCard(QtWidgets.QMainWindow, bingo_card_generator.Ui_Dialog):
 
 def main():
     app = QtWidgets.QApplication([])
-    app.setWindowIcon(QtGui.QIcon(os.path.join(basedir, 'bingo.ico')))
+    #app.setWindowIcon(QtGui.QIcon(os.path.join(basedir, 'bingo.ico')))
     form = BingoCard()
     form.show()
     app.exec_()

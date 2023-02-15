@@ -6,10 +6,10 @@ with open("README.md", encoding='utf8') as readme:
 
 setup(
     name="bingo-card-generator",
-    version="4.1.0",
+    version="5.0.0",
     author="Corey Forman",
     url="https://github.com/digitalsleuth/bingo-card-generator",
-    description=("Interactive Bingo Card Generator"),
+    description=("Bingo Card Generator"),
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=find_packages(),
@@ -18,9 +18,10 @@ setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        "pdfkit",
         "openpyxl",
-        "Pillow"
+        "pdfkit",
+        "Pillow",
+        "webcolors"
     ],
     scripts=['bingo_card_generator.py', 'bingo_gui.py'],
     package_data={'': ['README.md, LICENSE']}

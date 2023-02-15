@@ -1,10 +1,12 @@
 # Bingo Card Generator
-## bingo-card-generator
-Interactive and PDF Bingo Card Generator
+
+## Generate interactive BINGO cards and PDF's for printing!
 
 Tool to generate a clickable, interactive bingo cards for virtual bingo events, and generate PDF's for offline use (for those who would rather print and use paper).  
 
-Requires pdfkit, Pillow, and wkhtmltopdf (wkhtmltopdf is dependent on OS it's being run on (Windows requires an exe, linux install from pkg manager))
+Requires pdfkit, Pillow, webcolors, and wkhtmltopdf (wkhtmltopdf is dependent on OS it's being run on (Windows requires an exe, linux install from pkg manager))  
+
+Make sure you get wkhtmltopdf first before running Bingo Card Generator - [Linux and Windows Flavours](https://github.com/wkhtmltopdf/packaging/releases/tag/0.12.6-1)
 
 This tool generates 6 cards on one sheet (2 rows of 3 cards).
 
@@ -32,6 +34,14 @@ Generates a spreadsheet to track all numbers called, and which cards actually ha
 - gives the ability to confirm an actual "BINGO" quickly, by selecting the card number and visually identifying the "shape"
 - when numbers are called, type them into the "CALL" sheet, and they will highlight on each card number  
   
+Easy mode: When selected from the Mode menu, will make 'daubbing' your numbers easier
+- In Easy Mode, if B4 is called, clicking on it once on one card will select it for all cards  
+- When not selected, if B4 is called, you will have to select it on each card manually  
+
+Toggle the dauber
+- Click the wrong number? Click it again to remove the dauber!
+
+
 ## Examples
 ### Type in the colour name
 
@@ -50,8 +60,4 @@ Generates a spreadsheet to track all numbers called, and which cards actually ha
 ### Allow the players to choose their own dauber  
 ![ChooseDauber](https://user-images.githubusercontent.com/62841822/216872552-18e31d86-42ff-488e-ab81-5bf096aee78a.png)
 
-
-### Standalone Executable
-Standalone executable made using pyinstaller:
-`pyinstaller -F --icon=bingo.ico bingo-card-generator.py`
 

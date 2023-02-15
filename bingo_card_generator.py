@@ -18,7 +18,6 @@ If these are removed, you can expect the PDF's to be off-center or misaligned.
 CSS Maple Leaf author Andre Lopes - https://codepen.io/alldrops/pen/jAzZmw
 '''
 
-from PyQt5 import QtCore, QtGui, QtWidgets
 import argparse
 from random import Random
 import re
@@ -26,8 +25,10 @@ import base64
 import csv
 import imghdr
 import os
-import pdfkit
 import sys
+import pdfkit
+import webcolors
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PIL import Image
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, NamedStyle, PatternFill, Alignment
@@ -35,45 +36,43 @@ from openpyxl.utils import get_column_letter
 from openpyxl.formatting.rule import FormulaRule
 
 __author__ = 'Corey Forman'
-__date__ = '06 Feb 2023'
-__version__ = '4.1.0'
-__description__ = 'Interactive Bingo Card Generator'
+__date__ = '14 Feb 2023'
+__version__ = '5.0.0'
+__description__ = f'Bingo Card Generator {__version__}'
 __source__ = 'https://github.com/digitalsleuth/bingo-card-generator'
 __colour_groups__ = 'https://www.w3schools.com/colors/colors_groups.asp'
 
 
-class Ui_Dialog(object):
+class Ui_Dialog():
+    """This is the main class for setting up the UI"""
     def setupUi(self, Dialog):
-        Palette = QtGui.QPalette()
-        Palette.setColor(Palette.ColorRole.Window, QtGui.QColor('#DDDDDD'))
+        """Instantiate and layout dialog options"""
         Dialog.setObjectName("Dialog")
         Dialog.setFixedSize(390, 260)
-        Dialog.setPalette(Palette)
+        label_font = QtGui.QFont()
+        label_font.setBold(False)
+        label_font.setWeight(60)
+        label_font.setPointSize(10)
         self.dauber_shape = QtWidgets.QComboBox(Dialog)
         self.dauber_shape.setGeometry(QtCore.QRect(134, 167, 131, 27))
         self.dauber_shape.setEditable(False)
         self.dauber_shape.setObjectName("dauber_shape")
-        self.dauber_shape.addItem("")
-        self.dauber_shape.addItem("")
-        self.dauber_shape.addItem("")
-        self.dauber_shape.addItem("")
-        self.dauber_shape.addItem("")
-        self.dauber_shape.addItem("")
-        self.dauber_shape.addItem("")
-        self.dauber_shape.addItem("")
-        self.dauber_shape.addItem("")
-        self.dauber_shape.addItem("")
-        self.dauber_shape.addItem("")
+        item_count = 1
+        while item_count < 12:
+            self.dauber_shape.addItem("")
+            item_count += 1
         self.dauber_shape.currentIndexChanged[int].connect(self.on_Select)
         self.dauber_shape_label = QtWidgets.QLabel(Dialog)
         self.dauber_shape_label.setGeometry(QtCore.QRect(10, 167, 121, 21))
         self.dauber_shape_label.setToolTipDuration(-1)
         self.dauber_shape_label.setObjectName("dauber_shape_label")
+        self.dauber_shape_label.setFont(label_font)
         self.title_label = QtWidgets.QLabel(Dialog)
-        self.title_label.setGeometry(QtCore.QRect(4, 2, 388, 20))
+        self.title_label.setGeometry(QtCore.QRect(0, 21, 388, 20))
         font = QtGui.QFont()
         font.setBold(True)
         font.setWeight(75)
+        font.setPointSize(10)
         self.title_label.setFont(font)
         self.title_label.setAlignment(QtCore.Qt.AlignCenter)
         self.title_label.setObjectName("title_label")
@@ -81,16 +80,18 @@ class Ui_Dialog(object):
         self.dauber_colour_label.setGeometry(QtCore.QRect(10, 132, 121, 21))
         self.dauber_colour_label.setToolTipDuration(-1)
         self.dauber_colour_label.setObjectName("dauber_colour_label")
+        self.dauber_colour_label.setFont(label_font)
         self.card_colour_label = QtWidgets.QLabel(Dialog)
         self.card_colour_label.setGeometry(QtCore.QRect(10, 92, 121, 21))
         self.card_colour_label.setToolTipDuration(-1)
         self.card_colour_label.setObjectName("card_colour_label")
+        self.card_colour_label.setFont(label_font)
         self.allow_select = QtWidgets.QPushButton("Enable Choices", Dialog)
         self.allow_select.setObjectName("allow_select")
         self.allow_select.setCheckable(True)
+        self.allow_select.setFont(label_font)
         self.allow_select.clicked.connect(self.selectBox)
         self.allow_select.setGeometry(QtCore.QRect(280, 127, 100, 31))
-        self.allow_select.setStyleSheet("background-color: rgb(221, 221, 221)")
         self.select_logo = QtWidgets.QPushButton(Dialog)
         self.select_logo.setGeometry(QtCore.QRect(280, 167, 100, 27))
         self.select_logo.setDefault(False)
@@ -98,24 +99,36 @@ class Ui_Dialog(object):
         self.select_logo.clicked.connect(self.selectLogo)
         self.select_logo.setEnabled(False)
         self.select_logo.setVisible(False)
+        self.select_logo.setFont(label_font)
         self.select_result = QtWidgets.QLineEdit(Dialog)
         self.select_result.setObjectName("select_result")
         self.select_result.setReadOnly(True)
         self.select_result.setVisible(False)
         self.select_result.setGeometry(QtCore.QRect(8, 205, 372, 30))
+        self.select_result.setFont(label_font)
         self.generate = QtWidgets.QPushButton(Dialog)
         self.generate.setGeometry(QtCore.QRect(280, 47, 100, 31))
         self.generate.setDefault(False)
+        self.generate.setFont(label_font)
         self.generate.setObjectName("generate")
-        self.generate.clicked.connect(lambda: guiEverything(int(self.number.text()),self.card_colour.text(), self.dauber_colour.text(), self.dauber_shape.currentText(), self.getDirectory(), self.selectLogo(), self.selectBox()))
+        self.generate.clicked.connect(lambda: guiEverything(int(self.number.text()),
+                                                            self.card_colour.text(),
+                                                            self.dauber_colour.text(),
+                                                            self.dauber_shape.currentText(),
+                                                            self.getDirectory(),
+                                                            self.selectLogo(),
+                                                            self.selectBox(),
+                                                            self.easyMode()))
         self.close = QtWidgets.QPushButton(Dialog)
         self.close.setGeometry(QtCore.QRect(280, 87, 100, 31))
         self.close.setObjectName("close")
+        self.close.setFont(label_font)
         self.close.clicked.connect(QtWidgets.QApplication.instance().quit)
         self.number_label = QtWidgets.QLabel(Dialog)
         self.number_label.setGeometry(QtCore.QRect(10, 52, 121, 21))
         self.number_label.setToolTipDuration(-1)
         self.number_label.setObjectName("number_label")
+        self.number_label.setFont(label_font)
         self.number = QtWidgets.QLineEdit(Dialog)
         self.number.setGeometry(QtCore.QRect(134, 47, 131, 31))
         self.number.setPlaceholderText("")
@@ -138,15 +151,10 @@ class Ui_Dialog(object):
         self.dauber_colour_picker.setGeometry(QtCore.QRect(110, 132, 20, 20))
         self.dauber_colour_picker.setStyleSheet("background-color: red; border: 1px solid black")
         self.dauber_colour_picker.setEnabled(False)
-        self.version_label = QtWidgets.QLabel(Dialog)
-        self.version_label.setGeometry(QtCore.QRect(4, 19, 388, 20))
         font = QtGui.QFont()
         font.setPointSize(10)
         font.setBold(False)
         font.setWeight(50)
-        self.version_label.setFont(font)
-        self.version_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.version_label.setObjectName("version_label")
         self.source_label = QtWidgets.QLabel(Dialog)
         self.source_label.setGeometry(QtCore.QRect(4, 240, 372, 20))
         self.source_label.setAlignment(QtCore.Qt.AlignCenter)
@@ -154,7 +162,8 @@ class Ui_Dialog(object):
         self.source_label.setOpenExternalLinks(True)
         self.source_label.setParent(self)
         linkTemplate = '<a href={0}>{1}</a>'
-        self.source_label.setText(linkTemplate.format(__source__, 'Source @ GitHub.com/digitalsleuth'))
+        self.source_label.setText(linkTemplate.format(__source__,
+                                                      'Source @ GitHub.com/digitalsleuth'))
         self.dauber_shape_label.setBuddy(self.dauber_shape)
         self.dauber_colour_label.setBuddy(self.dauber_colour)
         self.card_colour_label.setBuddy(self.card_colour)
@@ -172,7 +181,7 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         """Translate layout of the UI components"""
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Interactive Bingo Card Generator"))
+        Dialog.setWindowTitle(_translate("Dialog", __description__))
         self.dauber_shape.setCurrentText(_translate("Dialog", "Circle"))
         self.dauber_shape.setItemText(0, _translate("Dialog", "Checkmark"))
         self.dauber_shape.setItemText(1, _translate("Dialog", "Circle"))
@@ -187,7 +196,7 @@ class Ui_Dialog(object):
         self.dauber_shape.setItemText(10, _translate("Dialog", "X-Mark"))
         self.dauber_shape_label.setToolTip(_translate("Dialog", "Choose the shape of the dauber"))
         self.dauber_shape_label.setText(_translate("Dialog", "Dauber Shape"))
-        self.title_label.setText(_translate("Dialog", "Interactive Bingo Card Generator"))
+        self.title_label.setText(_translate("Dialog", __description__))
         self.dauber_colour.setText(_translate("Dialog", "Red"))
         self.dauber_colour_label.setToolTip(_translate("Dialog", "Choose the colour of the dauber"))
         self.dauber_colour_label.setText(_translate("Dialog", "Dauber Colour"))
@@ -201,22 +210,27 @@ class Ui_Dialog(object):
         self.number_label.setText(_translate("Dialog", "# of Cards"))
         self.card_colour.setPlaceholderText(_translate("Dialog", "Blue"))
         self.dauber_colour.setPlaceholderText(_translate("Dialog", "Red"))
-        self.version_label.setText(_translate("Dialog", __version__ + " - " + __date__))
+        self._menuBar()
 
     def getDirectory(self):
         """Get the output directory"""
         dialogBox = QtWidgets.QFileDialog()
         dialogBox.setFileMode(QtWidgets.QFileDialog.Directory)
         dialogBox.setOption(QtWidgets.QFileDialog.ShowDirsOnly)
-        chosenPath = dialogBox.getExistingDirectory(self, 'Select the output location for your cards ...', os.path.curdir)
-
+        chosenPath = dialogBox.getExistingDirectory(self,
+                                                    'Select the output location for your cards',
+                                                    os.path.curdir)
+        chosenPath = QtCore.QDir.toNativeSeparators(chosenPath)
         return chosenPath
 
     def selectLogo(self):
         """Determine if the Logo option is selected and provide the result"""
         index = self.dauber_shape.currentIndex()
         if ((index == 4) and self.select_result.text() == ''):
-            selected_file, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select the image you wish to use...","", "Image Files (*.jpg *.png)")
+            selected_file, _ = QtWidgets.QFileDialog.getOpenFileName(self,
+                                                                     "Select the image to use",
+                                                                     "",
+                                                                     "Image Files (*.jpg *.png)")
             self.select_result.setText(selected_file)
         elif ((index == 4) and self.select_result.text() != ''):
             selected_file = self.select_result.text()
@@ -229,10 +243,10 @@ class Ui_Dialog(object):
         """Used to determine if the dauber selection box is enabled"""
         if self.allow_select.isChecked():
             self.allow_select.setStyleSheet("background-color: lightblue")
-            return True
         else:
-            self.allow_select.setStyleSheet("background-color: rgb(221, 221, 221)")
-            return False
+            self.allow_select.setStyleSheet("")
+
+        return bool(self.allow_select.isChecked())
 
     def on_Select(self, index):
         """Modifies display of UI components depending on dropdown selection"""
@@ -245,32 +259,157 @@ class Ui_Dialog(object):
     def dauberColourPicker(self):
         """Colour picker for choosing the dauber colour"""
         dauberColour = QtWidgets.QColorDialog.getColor()
+        colour_db = webcolors.CSS3_HEX_TO_NAMES
         if dauberColour.isValid():
-            self.dauber_colour_picker.setStyleSheet('QPushButton { background-color: ' + dauberColour.name() + '; border: 1px solid black}')
-            self.dauber_colour.setText(dauberColour.name())
+            if dauberColour.name() in colour_db.keys():
+                colour_name = (colour_db[dauberColour.name()]).capitalize()
+            else:
+                colour_name = (dauberColour.name()).upper()
+            self.dauber_colour_picker.setStyleSheet(f'background-color: {colour_name}; border: 1px solid black')
+            self.dauber_colour.setText(colour_name)
         else:
-            self.dauber_colour_picker.setStyleSheet('QPushButton { background-color: red; border: 1px solid black}')
+            self.dauber_colour_picker.setStyleSheet('background-color: red; border: 1px solid black')
             self.dauber_colour.setText('Red')
 
     def cardColourPicker(self):
         """Colour picker for choosing the card colour"""
         cardColour = QtWidgets.QColorDialog.getColor()
+        colour_db = webcolors.CSS3_HEX_TO_NAMES
         if cardColour.isValid():
-            self.card_colour_picker.setStyleSheet('QPushButton { background-color: ' + cardColour.name() + '; border: 1px solid black}')
-            self.card_colour.setText(cardColour.name())
+            if cardColour.name() in colour_db.keys():
+                colour_name = (colour_db[cardColour.name()]).capitalize()
+            else:
+                colour_name = (cardColour.name()).upper()
+            self.card_colour_picker.setStyleSheet(f'background-color: {colour_name}; border: 1px solid black')
+            self.card_colour.setText(colour_name)
         else:
-            self.card_colour_picker.setStyleSheet('QPushButton { background-color: blue; border: 1px solid black}')
+            self.card_colour_picker.setStyleSheet('background-color: blue; border: 1px solid black')
             self.card_colour.setText('Blue')
 
-def guiEverything(number, card_colour, dauber_colour, dauber_shape, output, logo, allow_select):
+    def easyMode(self):
+        """That was easy.."""
+        return bool(self.easyModeAction.isChecked())
+
+    def _menuBar(self):
+        """Add a menu bar"""
+        self.menuBar = self.menuBar()
+        self.exitAction = QtWidgets.QAction("&Exit", self)
+        self.exitAction.triggered.connect(QtWidgets.QApplication.instance().quit)
+        self.fileMenu = QtWidgets.QMenu("&File", self)
+        self.fileMenu.addAction(self.exitAction)
+        self.menuBar.addMenu(self.fileMenu)
+        self.modeMenu = self.menuBar.addMenu("&Mode")
+        self.easyModeAction = QtWidgets.QAction("&Easy", self, checkable=True)
+        self.easyModeAction.triggered.connect(self.easyMode)
+        self.modeMenu.addAction(self.easyModeAction)
+        self.helpMenu = self.menuBar.addMenu("&Help")
+        self.helpContentAction = QtWidgets.QAction("&Usage", self)
+        self.helpContentAction.triggered.connect(self._helpMenu)
+        self.aboutAction = QtWidgets.QAction("&About", self)
+        self.aboutAction.triggered.connect(self._about)
+        self.helpMenu.addAction(self.helpContentAction)
+        self.helpMenu.addAction(self.aboutAction)
+
+    def _helpMenu(self):
+        """Add a help menu to the menu bar"""
+        self.helpBox = QtWidgets.QDialog(None, QtCore.Qt.WindowCloseButtonHint)
+        self.helpBox.setWindowTitle(f"Help")
+        self.helpBox.setFixedSize(600, 690)
+        self.helpBox.setStyleSheet('background-color: white')
+        self.helpLabel = QtWidgets.QLabel(self.helpBox)
+        font = QtGui.QFont()
+        font.setPointSize(9)
+        font.setBold(False)
+        font.setWeight(60)
+        self.helpLabel.move(10, 10)
+        self.helpLabel.setFont(font)
+        help = (f"# of Cards:\tChoose how many cards you would like to generate - must be a number\n\n"
+                f"Card Colour:\tEither click the colour box to open a Colour Picker dialog box\n"
+                f"\t\tor type the colour into the text box. Colour names are drawn from:\n"
+                f"\t\t{__colour_groups__}\n\n"
+                f"Dauber Colour:\tAs with Card Colour, click the colour box for the Colour Picker\n"
+                f"\t\tor type the colour into the text box. Colour names are drawn from:\n"
+                f"\t\t{__colour_groups__}\n\n"
+                f"Dauber Shape:\tClick the dropdown box to choose the shape of the dauber to be used\n"
+                f"\t\tThe 'Logo' option will present the option to choose a custom file or logo to use\n"
+                f"\t\tas a dauber. This file will be resized to 48x48px, so ensure the image you choose\n"
+                f"\t\tis of a good quality to start.\n"
+                f"\t\tThe Dauber Shape option works in conjunction with the 'Enable Choices' button.\n\n"
+                f"Select Logo:\tThis option only appears when 'Logo' is chosen from the 'Dauber Shape'\n"
+                f"\t\tdrop-down box. Opens a File Chooser dialog to select either a JPG or PNG file.\n"
+                f"\t\tThe file chosen will show in the box below to confirm the choice.\n\n"
+                f"Generate:\tWill generate the bingo cards with the selected options. If some options\n"
+                f"\t\tare left blank, defaults will be selected (blue card, red circle dauber).\n"
+                f"\t\tWill then pop up a directory selection box to choose where to save the files.\n\n"
+                f"Close:\t\tSelf-explanatory, will close the application.\n\n"
+                f"Enable Choices:\tThis gives the player the option to choose their own dauber from\n"
+                f"\t\ta drop-down box at the top of the card, or doesn't give them the option if not\n"
+                f"\t\tselected.\n\n"
+                f"Mode:\t\tNormal means when a number is selected, it is only selected in the spot that\n"
+                f"\t\tthat was clicked. If B4 is called, the player must click on each square which\n"
+                f"\t\thas a B4.\n"
+                f"\t\tEasy means when a number is selected, it is selected on all spots that contain\n"
+                f"\t\tthe number which was clicked. If B4 is called, when the player clicks it on\n"
+                f"\t\tone card, it is automatically 'daubbed' on all cards on the sheet.\n"
+                f"\t\tNOTE: This option is not presented to the player, and is only available within\n"
+                f"\t\tthe application.\n\n\n"
+                f"The final output of the application will be a combination of HTML files, PDF files and a single Excel\n"
+                f"spreadsheet. The HTML and PDF files will be named for the card number and colour\n"
+                f"(ie. 1-blue.html, 1-blue.pdf). Both the HTML and PDF file should be given to the player so they have\n"
+                f"an option to print or click.\n\n"
+                f"The Excel file is named for the card colour, and allows you to enter the numbers called into the CALL\n"
+                f"sheet, and when Bingo is called, you can click on the sheet with the card number on it and the called\n"
+                f"numbers will be automatically highlighted. This enables easy confirmation of a successful BINGO!")
+        self.helpLabel.setText(help)
+        self.helpLabel.adjustSize()
+
+        self.helpBox.exec_()
+
+    def _about(self):
+        """Add an About menu to the menu bar"""
+        self.aboutBox = QtWidgets.QMessageBox()
+        self.aboutBox.setIcon(QtWidgets.QMessageBox.Information)
+        self.aboutBox.setWindowTitle(f"About {__description__}")
+        self.aboutBox.setText(f"{__description__}\n"
+                              f"Last Updated: {__date__}")
+        linkTemplate = '<a href={0}>{1}</a>'
+        self.aboutBox.setInformativeText(linkTemplate.format(__source__, __source__))
+        self.aboutBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        self.aboutBox.exec_()
+
+def guiEverything(number, card_colour, dauber_colour, dauber_shape, output, logo, allow_select, easy):
     """Takes all input from the GUI and passes it to the various functions"""
-    args = {'num': number, 'pdf': True, 'card_colour': card_colour, 'dauber_colour': dauber_colour, 'dauber_shape': dauber_shape, 'logo': logo, 'allow_select': allow_select, 'base_colour': card_colour, 'output': output, 'excel': str((card_colour).strip("#") + '-cards.xlsx'), 'everything': True}
+    args = {'num': number,
+            'pdf': True,
+            'card_colour': card_colour,
+            'dauber_colour': dauber_colour,
+            'dauber_shape': dauber_shape,
+            'logo': logo,
+            'allow_select': allow_select,
+            'base_colour': card_colour,
+            'output': output,
+            'easy': easy,
+            'excel': f'{str((card_colour).strip("#"))}-cards.xlsx',
+            'everything': True}
     createCard(args)
     grabNumbers(args)
     writeToExcel(args['num'], args['card_colour'], args['excel'], args['output'])
+    if number == 1:
+        amt = 'card'
+    else:
+        amt = 'cards'
+    if dauber_shape.lower() not in ('circle', 'square', 'maple-leaf', 'heart'):
+        dauber_colour = ''
+    else:
+        dauber_colour = f'{dauber_colour.lower()} '
     msgBox = QtWidgets.QMessageBox()
+    msgBox.setIcon(QtWidgets.QMessageBox.Information)
     msgBox.setWindowTitle("Finished")
-    msgBox.setText("All files created in {}\n\n{} {} card(s) created with a {}, {} dauber.\n\n{} Excel file also created for tracking called numbers.\n\nYou may close the Bingo Card Generator now, or generate more cards if you wish.".format(str(args['output']), str(args['num']), args['card_colour'], args['dauber_colour'], args['dauber_shape'], args['excel']))
+    msgBox.setText(f"All files created in {output}\n\n{str(number)}"
+                   f" {card_colour.lower()} {amt} created with a "
+                   f"{dauber_colour}{dauber_shape.lower()} dauber.\n\n"
+                   f"Excel file named {args['excel']} created for tracking called numbers.\n\n"
+                   f"You may now close the Bingo Card Generator, or generate more cards.")
     msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
     msgBox.exec_()
 
@@ -281,17 +420,14 @@ def createCard(arguments):
     dauber_colour = arguments['dauber_colour'].lower()
     dauber_shape = arguments['dauber_shape'].lower()
     output_path = arguments['output'] + os.sep
+    cards_per_sheet = 6  ## TODO - Preparation for adjusting cards per sheet
     if not os.path.exists(output_path):
         os.mkdir(output_path)
     total = 1
     card_title = ""
-    open_head = '''<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-'''
+    open_head = '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">'
     open_style = "<style>"
-    if arguments['logo'] == False or arguments['logo'] == '':
+    if not arguments['logo'] or arguments['logo'] == '':
         selected_logo = 'url(data:image/png;base64,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);'
     else:
         selected_logo = f"url({convertLogo(arguments['logo'])});"
@@ -312,6 +448,7 @@ def createCard(arguments):
 .headers > div span { font-size: 30px; color: #fff; font-weight: bold; font-family: Arial, Helvetica, sans-serif;}
 .column { float: left; width: 80px; text-align: center; }
 .number { padding: 20px 0; border: 2px solid ''' + card_colour + '''; background-color: #fff; font-family: "Roboto Condensed", sans-serif; font-weight: normal; height: 16px; }
+.number:hover { opacity: 0.8; }
 .number span { color: #000; font-size: 20px; }
 .number span:hover { text-shadow: 0 0 5px rgba(0,0,0,0.5); }
 .button {
@@ -374,321 +511,38 @@ text-align: center;
   <option value="square">&#128998; Square</option>
   <option value="star">&#11088; Star</option>
   <option value="unicorn">&#129412; Unicorn</option>
-  <option value="x-mark">&#10060; X Marks The Spot</option>
-</select> 
+  <option value="x-mark">&#10060; X Mark</option>
+</select>
 '''
     else:
         select_box = '\n'
-    body = '''
-<div class="card-title">''' + card_title + '''</div>
-<div class="grid-container 1">
-<div class="grid-child 1">
-<div class="clear"></div>
-<div class="card 1">
-  <div class="headers">
-    <div><span>B</span></div>
-    <div><span>I</span></div>
-    <div><span>N</span></div>
-    <div><span>G</span></div>
-    <div><span>O</span></div>
-  </div>
-  <div class="column 1">
-    <div class="number col-1" id="card1-c1"></div>
-    <div class="number col-6" id="card1-c6"></div>
-    <div class="number col-11" id="card1-c11"></div>
-    <div class="number col-16" id="card1-c16"></div>
-    <div class="number col-21" id="card1-c21"></div>
-  </div>
-  <div class="column 2">
-    <div class="number col-2" id="card1-c2"></div>
-    <div class="number col-7" id="card1-c7"></div>
-    <div class="number col-12" id="card1-c12"></div>
-    <div class="number col-17" id="card1-c17"></div>
-    <div class="number col-22" id="card1-c22"></div>
-  </div>
-  <div class="column 3">
-    <div class="number col-3" id="card1-c3"></div>
-    <div class="number col-8" id="card1-c8"></div>
-    <div class="number col-13" id="card1-c13"></div>
-    <div class="number col-18" id="card1-c18"></div>
-    <div class="number col-23" id="card1-c23"></div>
-  </div>
-  <div class="column 4">
-    <div class="number col-4" id="card1-c4"></div>
-    <div class="number col-9" id="card1-c9"></div>
-    <div class="number col-14" id="card1-c14"></div>
-    <div class="number col-19" id="card1-c19"></div>
-    <div class="number col-24" id="card1-c24"></div>
-  </div>
-  <div class="column 5">
-    <div class="number col-5" id="card1-c5"></div>
-    <div class="number col-10" id="card1-c10"></div>
-    <div class="number col-15" id="card1-c15"></div>
-    <div class="number col-20" id="card1-c20"></div>
-    <div class="number col-25" id="card1-c25"></div>
-  </div>
-</div>
-</div>
-
-<div class="grid-child 2">
-<div class="clear"></div>
-<div class="card 2">
-  <div class="headers">
-    <div><span>B</span></div>
-    <div><span>I</span></div>
-    <div><span>N</span></div>
-    <div><span>G</span></div>
-    <div><span>O</span></div>
-  </div>
-  <div class="column 1">
-    <div class="number col-1" id="card2-c1"></div>
-    <div class="number col-6" id="card2-c6"></div>
-    <div class="number col-11" id="card2-c11"></div>
-    <div class="number col-16" id="card2-c16"></div>
-    <div class="number col-21" id="card2-c21"></div>
-  </div>
-  <div class="column 2">
-    <div class="number col-2" id="card2-c2"></div>
-    <div class="number col-7" id="card2-c7"></div>
-    <div class="number col-12" id="card2-c12"></div>
-    <div class="number col-17" id="card2-c17"></div>
-    <div class="number col-22" id="card2-c22"></div>
-  </div>
-  <div class="column 3">
-    <div class="number col-3" id="card2-c3"></div>
-    <div class="number col-8" id="card2-c8"></div>
-    <div class="number col-13" id="card2-c13"></div>
-    <div class="number col-18" id="card2-c18"></div>
-    <div class="number col-23" id="card2-c23"></div>
-  </div>
-  <div class="column 4">
-    <div class="number col-4" id="card2-c4"></div>
-    <div class="number col-9" id="card2-c9"></div>
-    <div class="number col-14" id="card2-c14"></div>
-    <div class="number col-19" id="card2-c19"></div>
-    <div class="number col-24" id="card2-c24"></div>
-  </div>
-  <div class="column 5">
-    <div class="number col-5" id="card2-c5"></div>
-    <div class="number col-10" id="card2-c10"></div>
-    <div class="number col-15" id="card2-c15"></div>
-    <div class="number col-20" id="card2-c20"></div>
-    <div class="number col-25" id="card2-c25"></div>
-  </div>
-</div>
-</div>
-
-<div class="grid-child 3">
-<div class="clear"></div>
-<div class="card 3">
-  <div class="headers">
-    <div><span>B</span></div>
-    <div><span>I</span></div>
-    <div><span>N</span></div>
-    <div><span>G</span></div>
-    <div><span>O</span></div>
-  </div>
-  <div class="column 1">
-    <div class="number col-1" id="card3-c1"></div>
-    <div class="number col-6" id="card3-c6"></div>
-    <div class="number col-11" id="card3-c11"></div>
-    <div class="number col-16" id="card3-c16"></div>
-    <div class="number col-21" id="card3-c21"></div>
-  </div>
-  <div class="column 2">
-    <div class="number col-2" id="card3-c2"></div>
-    <div class="number col-7" id="card3-c7"></div>
-    <div class="number col-12" id="card3-c12"></div>
-    <div class="number col-17" id="card3-c17"></div>
-    <div class="number col-22" id="card3-c22"></div>
-  </div>
-  <div class="column 3">
-    <div class="number col-3" id="card3-c3"></div>
-    <div class="number col-8" id="card3-c8"></div>
-    <div class="number col-13" id="card3-c13"></div>
-    <div class="number col-18" id="card3-c18"></div>
-    <div class="number col-23" id="card3-c23"></div>
-  </div>
-  <div class="column 4">
-    <div class="number col-4" id="card3-c4"></div>
-    <div class="number col-9" id="card3-c9"></div>
-    <div class="number col-14" id="card3-c14"></div>
-    <div class="number col-19" id="card3-c19"></div>
-    <div class="number col-24" id="card3-c24"></div>
-  </div>
-  <div class="column 5">
-    <div class="number col-5" id="card3-c5"></div>
-    <div class="number col-10" id="card3-c10"></div>
-    <div class="number col-15" id="card3-c15"></div>
-    <div class="number col-20" id="card3-c20"></div>
-    <div class="number col-25" id="card3-c25"></div>
-  </div>
-</div>
-</div>
-
-</div>
-
-<div class="grid-container 2">
-
-<div class="grid-child 4">
-<div class="clear"></div>
-<div class="card 4">
-  <div class="headers">
-    <div><span>B</span></div>
-    <div><span>I</span></div>
-    <div><span>N</span></div>
-    <div><span>G</span></div>
-    <div><span>O</span></div>
-  </div>
-  <div class="column 1">
-    <div class="number col-1" id="card4-c1"></div>
-    <div class="number col-6" id="card4-c6"></div>
-    <div class="number col-11" id="card4-c11"></div>
-    <div class="number col-16" id="card4-c16"></div>
-    <div class="number col-21" id="card4-c21"></div>
-  </div>
-  <div class="column 2">
-    <div class="number col-2" id="card4-c2"></div>
-    <div class="number col-7" id="card4-c7"></div>
-    <div class="number col-12" id="card4-c12"></div>
-    <div class="number col-17" id="card4-c17"></div>
-    <div class="number col-22" id="card4-c22"></div>
-  </div>
-  <div class="column 3">
-    <div class="number col-3" id="card4-c3"></div>
-    <div class="number col-8" id="card4-c8"></div>
-    <div class="number col-13" id="card4-c13"></div>
-    <div class="number col-18" id="card4-c18"></div>
-    <div class="number col-23" id="card4-c23"></div>
-  </div>
-  <div class="column 4">
-    <div class="number col-4" id="card4-c4"></div>
-    <div class="number col-9" id="card4-c9"></div>
-    <div class="number col-14" id="card4-c14"></div>
-    <div class="number col-19" id="card4-c19"></div>
-    <div class="number col-24" id="card4-c24"></div>
-  </div>
-  <div class="column 5">
-    <div class="number col-5" id="card4-c5"></div>
-    <div class="number col-10" id="card4-c10"></div>
-    <div class="number col-15" id="card4-c15"></div>
-    <div class="number col-20" id="card4-c20"></div>
-    <div class="number col-25" id="card4-c25"></div>
-  </div>
-</div>
-</div>
-
-<div class="grid-child 5">
-<div class="clear"></div>
-<div class="card 5">
-  <div class="headers">
-    <div><span>B</span></div>
-    <div><span>I</span></div>
-    <div><span>N</span></div>
-    <div><span>G</span></div>
-    <div><span>O</span></div>
-  </div>
-  <div class="column 1">
-    <div class="number col-1" id="card5-c1"></div>
-    <div class="number col-6" id="card5-c6"></div>
-    <div class="number col-11" id="card5-c11"></div>
-    <div class="number col-16" id="card5-c16"></div>
-    <div class="number col-21" id="card5-c21"></div>
-  </div>
-  <div class="column 2">
-    <div class="number col-2" id="card5-c2"></div>
-    <div class="number col-7" id="card5-c7"></div>
-    <div class="number col-12" id="card5-c12"></div>
-    <div class="number col-17" id="card5-c17"></div>
-    <div class="number col-22" id="card5-c22"></div>
-  </div>
-  <div class="column 3">
-    <div class="number col-3" id="card5-c3"></div>
-    <div class="number col-8" id="card5-c8"></div>
-    <div class="number col-13" id="card5-c13"></div>
-    <div class="number col-18" id="card5-c18"></div>
-    <div class="number col-23" id="card5-c23"></div>
-  </div>
-  <div class="column 4">
-    <div class="number col-4" id="card5-c4"></div>
-    <div class="number col-9" id="card5-c9"></div>
-    <div class="number col-14" id="card5-c14"></div>
-    <div class="number col-19" id="card5-c19"></div>
-    <div class="number col-24" id="card5-c24"></div>
-  </div>
-  <div class="column 5">
-    <div class="number col-5" id="card5-c5"></div>
-    <div class="number col-10" id="card5-c10"></div>
-    <div class="number col-15" id="card5-c15"></div>
-    <div class="number col-20" id="card5-c20"></div>
-    <div class="number col-25" id="card5-c25"></div>
-  </div>
-</div>
-</div>
-
-<div class="grid-child 6">
-<div class="clear"></div>
-<div class="card 6">
-  <div class="headers">
-    <div><span>B</span></div>
-    <div><span>I</span></div>
-    <div><span>N</span></div>
-    <div><span>G</span></div>
-    <div><span>O</span></div>
-  </div>
-  <div class="column 1">
-    <div class="number col-1" id="card6-c1"></div>
-    <div class="number col-6" id="card6-c6"></div>
-    <div class="number col-11" id="card6-c11"></div>
-    <div class="number col-16" id="card6-c16"></div>
-    <div class="number col-21" id="card6-c21"></div>
-  </div>
-  <div class="column 2">
-    <div class="number col-2" id="card6-c2"></div>
-    <div class="number col-7" id="card6-c7"></div>
-    <div class="number col-12" id="card6-c12"></div>
-    <div class="number col-17" id="card6-c17"></div>
-    <div class="number col-22" id="card6-c22"></div>
-  </div>
-  <div class="column 3">
-    <div class="number col-3" id="card6-c3"></div>
-    <div class="number col-8" id="card6-c8"></div>
-    <div class="number col-13" id="card6-c13"></div>
-    <div class="number col-18" id="card6-c18"></div>
-    <div class="number col-23" id="card6-c23"></div>
-  </div>
-  <div class="column 4">
-    <div class="number col-4" id="card6-c4"></div>
-    <div class="number col-9" id="card6-c9"></div>
-    <div class="number col-14" id="card6-c14"></div>
-    <div class="number col-19" id="card6-c19"></div>
-    <div class="number col-24" id="card6-c24"></div>
-  </div>
-  <div class="column 5">
-    <div class="number col-5" id="card6-c5"></div>
-    <div class="number col-10" id="card6-c10"></div>
-    <div class="number col-15" id="card6-c15"></div>
-    <div class="number col-20" id="card6-c20"></div>
-    <div class="number col-25" id="card6-c25"></div>
-  </div>
-</div>
-</div>
-
-</div>
-<a href="https://github.com/digitalsleuth/bingo-card-generator" class="footer"></a>
+    body_title = f'<div class="card-title">{card_title}</div>'
+    footer = '<a href="https://github.com/digitalsleuth/bingo-card-generator" class="footer"></a>'
+    script = '''
 <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js'></script>
 <script id='rendered-js' >
 '''
+    if arguments['easy']:
+        emode = '\nvar easy = true;\n'
+    else:
+        emode = '\nvar easy = false;\n'
+
+    js_array = "$i = ["
+    for card_num in range(1, (cards_per_sheet + 1)):
+        js_array = js_array + str(f"$card{card_num}, ")
+    js_array = f'\n{js_array.rstrip(", ")}]\n'
 
     js1 = '''
-$i = [$card1, $card2, $card3, $card4, $card5, $card6];
-
 $(document).ready(function() {
-  for ($card = 1; $card <= 6; $card++) {
+  var idArray = [];
+  for ($card = 1; $card <= ''' + str(cards_per_sheet) + '''; $card++) {
     for ($x = 0; $x <= 24; $x++) {
+	var numberId = ("card" + $card + "-c" + ($x+1));
+	idArray.push(numberId);
     $("<span>" + $i[($card - 1)][$x] + "</span>").appendTo('#card' + $card + '-c' + ($x + 1));
       }
   }
+
 function toggle(id) {
   var element = document.getElementById(id);
   var dauberChoice = $('select[name=dauber]').val();
@@ -697,12 +551,22 @@ function toggle(id) {
     { dauberChoice = "''' + dauber_shape + '''" };
   element.classList.toggle(dauberChoice);
 };
+
+function easyMode(clickedNumber) {
+  idArray.forEach(function(cardId) {
+    var currentNumber = ((document.getElementById(cardId)).innerHTML).replace( /(<([^>]+)>)/ig, '');
+    if (currentNumber == clickedNumber)
+	{ toggle(cardId) };
+  });
+};
 '''
     js2 = '''
   $('.number').click(function() {
-    toggle(this.id);
-'''
-    js3 = '''
+    if (easy == true) {
+  var callNumber = (this.innerHTML).replace( /(<([^>]+)>)/ig, '');
+  easyMode(callNumber);
+  } else { toggle(this.id) };
+
   $('#clear-card').click(function() {
     location.reload();
     });
@@ -711,6 +575,13 @@ function toggle(id) {
 </script>
 
 '''
+    header = ['B', 'I', 'N', 'G', 'O']
+    columns = {1: [1, 6, 11, 16, 21],
+               2: [2, 7, 12, 17, 22],
+               3: [3, 8, 13, 18, 23],
+               4: [4, 9, 14, 19, 24],
+               5: [5, 10, 15, 20, 25]
+              }
     if arguments['pdf']:
         print("Generating PDF's, please wait")
     while total <= int(arguments['num']):
@@ -731,15 +602,40 @@ function toggle(id) {
         html.write(open_body)
         html.write(card_clear)
         html.write(select_box)
-        html.write(body)
-        while count <= 6:
+        html.write(body_title)
+        html.write('<div class="grid-container 1">\n')
+        if cards_per_sheet > 3:
+            second_grid = int(-(-cards_per_sheet // 2))
+        else:
+            second_grid = ''
+        for card in range(1, (cards_per_sheet +1)):
+            html.write(f'<div class="grid-child {card}">\n')
+            html.write('<div class="clear"></div>\n')
+            html.write(f'<div class="card {card}">\n')
+            html.write('  <div class="headers">\n')
+            for letter in header:
+                html.write(f'    <div><span>{letter}</span></div>\n')
+            html.write('  </div>\n')
+            for col, _ in columns.items():
+                html.write(f'  <div class="column {col}">\n')
+                for colnumber in columns[col]:
+                    html.write(f'    <div class="number col-{colnumber}" id="card{card}-c{colnumber}"></div>\n')
+                html.write('  </div>\n')
+            html.write('</div>\n</div>\n')
+            if card == second_grid:
+                html.write('</div>\n<div class="grid-container 2">\n')
+        html.write('</div>\n')
+        html.write(footer)
+        html.write(script)
+        while count <= cards_per_sheet:
             nums = str(genNums())
             html.write(f'$card{str(count)} = {nums};\n')
             count += 1
+        html.write(emode)
+        html.write(js_array)
         html.write(js1)
         html.write(free_space)
         html.write(js2)
-        html.write(js3)
         html.write("</body></html>")
         html.close()
         if arguments['pdf']:
@@ -800,22 +696,28 @@ def genNums():
 
 def pdfPrint(html_file, out_file):
     """Configure options for printing to PDF"""
+    if sys.platform == 'linux':
+        left = '0.25in'
+        right = '0.25in'
+    else:
+        left = '0.1in'
+        right = '0in'
     options = {
         'page-size': 'Letter',
         'page-width': '8.5in',
         'page-height': '11in',
         'orientation': 'Landscape',
         'margin-top': '0.5in',
-        'margin-right': '0in',
+        'margin-right': right,
         'margin-bottom': '0.5in',
-        'margin-left': '0in',
+        'margin-left': left,
         'quiet': ''
     }
     with open(html_file, "r") as html:
-        html = html.read().replace(' - CLICK HERE TO CLEAR CARD','')
+        html = html.read().replace(' - CLICK HERE TO CLEAR CARD', '')
         html = html.replace('<a href="https://github.com/digitalsleuth/bingo-card-generator" class="footer"></a>',
                             '<div align="center" style="font-family: Roboto Condensed">https://github.com/digitalsleuth/bingo-card-generator</div>')
-        html = html.replace('<select','<!-- <select').replace('</select>','</select> -->')
+        html = html.replace('<select', '<!-- <select').replace('</select>', '</select> -->')
 
     html_back = f'{html_file}.html'
     with open(html_back, "w") as backup:
@@ -826,7 +728,11 @@ def pdfPrint(html_file, out_file):
 def grabNumbers(arguments):
     """Extracts the generated numbers from the HTML files to forward to other functions"""
     num = int(arguments['num'])
-    print(f"Extracting numbers from {num} cards")
+    if num == 1:
+        amt = 'card'
+    else:
+        amt = 'cards'
+    print(f"Extracting numbers from {num} {amt}")
     total = 1
     output_path = arguments['output']
     if arguments['everything'] and not arguments['base_colour']:
@@ -841,7 +747,8 @@ def grabNumbers(arguments):
         input_filename = input_filename.replace('#', '')
         input_file = open(input_filename, 'r')
         input_file = input_file.readlines()
-        output_filename = f'{output_path}{os.sep}{str(total)}-{basecolour.strip(".html")}.csv'
+        html_name, html_ext = os.path.splitext(basecolour)
+        output_filename = f'{output_path}{os.sep}{str(total)}-{html_name}.csv'
         output_file = open(output_filename, 'w+')
         full_sheet = []
         for line in input_file:
@@ -889,7 +796,7 @@ def writeToExcel(number_of_csvs, base_filename, excel_name, source_path):
     header = [' ', 'B', 'I', 'N', 'G', 'O',
               ' ', 'B', 'I', 'N', 'G', 'O',
               ' ', 'B', 'I', 'N', 'G', 'O']
-    excel_name = source_path + os.sep + excel_name
+    excel_name = f'{source_path}{os.sep}{excel_name}'
     call_sheet_header = ['B', 'I', 'N', 'G', 'O']
     call_sheet = NamedStyle(name="call_sheet")
     call_sheet.alignment.horizontal = 'center'
@@ -908,8 +815,9 @@ def writeToExcel(number_of_csvs, base_filename, excel_name, source_path):
     writer = Workbook(excel_name)
     call_worksheet = writer.create_sheet('CALL')
     call_worksheet.append(call_sheet_header)
+    base_name, base_ext = os.path.splitext(base_filename)
     for csvnum in range(1, number_of_csvs + 1):
-        csvfile = (f'{source_path}{os.sep}{str(csvnum)}-{base_filename.strip(".html")}.csv').lower()
+        csvfile = (f'{source_path}{os.sep}{str(csvnum)}-{base_name}.csv').lower()
         worksheet = writer.create_sheet(str(csvnum))
         readcsv = open(csvfile, 'r', newline='', encoding='utf-8')
         reader = csv.reader(readcsv)
@@ -937,8 +845,8 @@ def writeToExcel(number_of_csvs, base_filename, excel_name, source_path):
     col_O = ws_call.column_dimensions['E']
     col_B.font = col_I.font = col_N.font = col_G.font = col_O.font = call_font
     col_B.alignment = col_I.alignment = col_N.alignment = col_G.alignment = col_O.alignment = alignment
-    for i, cell in enumerate(ws_call["A1":"E1"]):
-        for n, cellObj in enumerate(cell):
+    for _, cell in enumerate(ws_call["A1":"E1"]):
+        for _, cellObj in enumerate(cell):
             cellObj.style = call_sheet
             cellObj.font = Font(bold=True, name='Arial', size='20', color='FF0000')
     for sheet in range(1, number_of_csvs + 1):
@@ -986,17 +894,17 @@ def writeToExcel(number_of_csvs, base_filename, excel_name, source_path):
             cell.style = bingo_header
         for cell in ws["15:15"]:
             cell.fill = borders
-        for i, cell in enumerate(ws["A1":"A15"]):
-            for n, cellObj in enumerate(cell):
+        for _, cell in enumerate(ws["A1":"A15"]):
+            for _, cellObj in enumerate(cell):
                 cellObj.fill = borders
-        for i, cell in enumerate(ws["G1":"G15"]):
-            for n, cellObj in enumerate(cell):
+        for _, cell in enumerate(ws["G1":"G15"]):
+            for _, cellObj in enumerate(cell):
                 cellObj.fill = borders
-        for i, cell in enumerate(ws["M1":"M15"]):
-            for n, cellObj in enumerate(cell):
+        for _, cell in enumerate(ws["M1":"M15"]):
+            for _, cellObj in enumerate(cell):
                 cellObj.fill = borders
-        for i, cell in enumerate(ws["S1":"S15"]):
-            for n, cellObj in enumerate(cell):
+        for _, cell in enumerate(ws["S1":"S15"]):
+            for _, cellObj in enumerate(cell):
                 cellObj.fill = borders
         for row in ws.rows:
             for cell in row:
@@ -1006,16 +914,18 @@ def writeToExcel(number_of_csvs, base_filename, excel_name, source_path):
 def main():
     """Parse arguments for PDF, card and dauber colour, and dauber shape"""
     arg_parse = argparse.ArgumentParser(
-        description='Interactive Bingo Card Generator v' + str(__version__),
-        epilog="If you'd like to see a few other color options, you can visit:\n" + __colour_groups__,
+        description='Bingo Card Generator v' + str(__version__),
+        epilog=f"If you'd like to see a few other color options, you can visit:\n{__colour_groups__}",
         formatter_class=argparse.RawTextHelpFormatter)
-    arg_parse.add_argument('-v', '--version', action='version', version='%(prog)s ' + str(__version__))
+    arg_parse.add_argument('-v', '--version',
+                           action='version',
+                           version='%(prog)s ' + str(__version__))
     group = arg_parse.add_argument_group(title='positional arguments',
-        description='''NUM_OF_CARDS
+                                         description='''NUM_OF_CARDS
 
 Customization options:
 
--e, --everything              Creates HTML files, PDF's and spreadsheet - use -c, -d, and -s for desired customization 
+-e, --everything              Creates HTML files, PDF's and spreadsheet - use -c, -d, and -s for desired customization
                               otherwise your cards will be set to default values.
 -p, --pdf                     Convert generated HTML files to PDFs
 -o, --output <output_dir>     Choose output directory
@@ -1025,6 +935,9 @@ Customization options:
                               Options are: checkmark, circle, clover, heart, logo, maple-leaf, moon, square, star, unicorn, x-mark
 -l, --logo <image_file>       If the logo is chosen for a shape, this is used to point to an image file (JPG or PNG) to use as a dauber
 -a, --allow-select            If chosen, provides a dropdown box on the HTML card for the player to change their dauber at will
+-z, --easy                    Enables "Easy Mode" - meaning once a number is clicked on one card, it is selected on all cards
+-x, --excel <path>            When not choosing "everything", generates an Excel document for the call numbers - requires -b
+-b, --base-colour <colour>    Identifies the base colour of the HTML files from which to generate the Excel Spreadsheet
 ''')
     group.add_argument('-p', '--pdf', action='store_true', help=argparse.SUPPRESS)
     group.add_argument('-o', '--output', metavar='', help=argparse.SUPPRESS, required=True)
@@ -1032,12 +945,23 @@ Customization options:
     group.add_argument('-c', '--card-colour', help=argparse.SUPPRESS, default='blue')
     group.add_argument('-d', '--dauber-colour', help=argparse.SUPPRESS, default='red')
     group.add_argument('-s', '--dauber-shape', help=argparse.SUPPRESS,
-        choices=['square','circle','maple-leaf','heart','star','moon','unicorn','clover','logo', 'checkmark', 'x-mark'], default='circle')
+                       choices=['square',
+                                'circle',
+                                'maple-leaf',
+                                'heart',
+                                'star',
+                                'moon',
+                                'unicorn',
+                                'clover',
+                                'logo',
+                                'checkmark',
+                                'x-mark'], default='circle')
     group.add_argument('-l', '--logo', help=argparse.SUPPRESS)
     group.add_argument('-a', '--allow-select', help=argparse.SUPPRESS, action='store_true')
     group.add_argument('-b', '--base-colour', help=argparse.SUPPRESS)
     group.add_argument('-x', '--excel', help=argparse.SUPPRESS)
     group.add_argument('-e', '--everything', help=argparse.SUPPRESS, action='store_true')
+    group.add_argument('-z', '--easy', help=argparse.SUPPRESS, action='store_true')
 
     if len(sys.argv[1:]) == 0:
         arg_parse.print_help()
