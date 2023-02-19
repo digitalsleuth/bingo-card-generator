@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+'''Setup for bingo-card-generator'''
+
 from setuptools import setup, find_packages
 
 with open("README.md", encoding='utf8') as readme:
@@ -6,7 +8,7 @@ with open("README.md", encoding='utf8') as readme:
 
 setup(
     name="bingo-card-generator",
-    version="5.0.0",
+    version="6.0.0",
     author="Corey Forman",
     url="https://github.com/digitalsleuth/bingo-card-generator",
     description=("Bingo Card Generator"),

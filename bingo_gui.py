@@ -1,28 +1,37 @@
 #!/usr/bin/env python3
-from PyQt5 import QtCore, QtGui, QtWidgets
-import bingo_card_generator
+'''
+Initiate the GUI and execute the application components
+from within bingo_card_generator
+'''
+
 import os
+from PyQt6 import QtGui, QtWidgets
+import bingo_card_generator
 
 basedir = os.path.dirname(__file__)
 
 try:
     from ctypes import windll
-    AppId = 'digitalsleuth.interactive-bingo-card-generator.gui.v5-0-0'
+    AppId = 'digitalsleuth.interactive-bingo-card-generator.gui.v6-0-0'
     windll.shell32.SetCurrentProcessExplicitAppUserModelID(AppId)
 except ImportError:
     pass
 
-class BingoCard(QtWidgets.QMainWindow, bingo_card_generator.Ui_Dialog):
+class BingoCard(QtWidgets.QMainWindow, bingo_card_generator.UiDialog):
+    """BingoCard Class"""
     def __init__(self, parent=None):
+        """Call and setup the UI"""
         super(BingoCard, self).__init__(parent)
-        self.setupUi(self)
+        self.setup_ui(self)
 
 def main():
-    app = QtWidgets.QApplication([])
-    #app.setWindowIcon(QtGui.QIcon(os.path.join(basedir, 'bingo.ico')))
-    form = BingoCard()
-    form.show()
-    app.exec_()
+    """Execute the application"""
+    bingo_app = QtWidgets.QApplication(['-platform', 'windows:darkmode=2'])
+    bingo_app.setWindowIcon(QtGui.QIcon(os.path.join(basedir, 'bingo.ico')))
+    bingo_app.setStyle('Fusion')
+    bingo_form = BingoCard()
+    bingo_form.show()
+    bingo_app.exec()
 
 if __name__ == '__main__':
     main()
