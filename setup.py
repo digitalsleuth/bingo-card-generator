@@ -20,6 +20,7 @@ setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
+        "PyQt6",
         "openpyxl",
         "pdfkit",
         "Pillow",

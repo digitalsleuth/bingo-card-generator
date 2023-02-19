@@ -1,0 +1,10 @@
+LICENSE.md
+README.md
+bingo_card_generator.py
+bingo_gui.py
+setup.py
+bingo_card_generator.egg-info/PKG-INFO
+bingo_card_generator.egg-info/SOURCES.txt
+bingo_card_generator.egg-info/dependency_links.txt
+bingo_card_generator.egg-info/requires.txt
+bingo_card_generator.egg-info/top_level.txt
