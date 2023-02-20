@@ -29,8 +29,8 @@ from openpyxl.utils import get_column_letter
 from openpyxl.formatting.rule import FormulaRule
 
 __author__ = 'Corey Forman'
-__date__ = '18 Feb 2023'
-__version__ = '6.0.0'
+__date__ = '19 Feb 2023'
+__version__ = '6.0.1'
 __description__ = f'Bingo Card Generator {__version__}'
 __source__ = 'https://github.com/digitalsleuth/bingo-card-generator'
 __colour_groups__ = 'https://www.w3schools.com/colors/colors_groups.asp'
